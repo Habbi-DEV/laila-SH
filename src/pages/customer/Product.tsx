@@ -24,16 +24,14 @@ export default function ProductPage() {
   useEffect(() => {
     if (!id) return;
     setLoading(true);
-    
-    // استخدام ProductsAPI لجلب تفاصيل المنتج بناءً على المعرف
-    ProductsAPI.getProduct(String(id))
-      .then((d: any) => {
+    ProductsAPI.getProductById(id)
+      .then(d => {
         setProduct(d.product);
         setVariants(d.variants || []);
         const di = (d.variants || []).findIndex((v: ProductVariant) => v.is_default);
         setSelVariant(di >= 0 ? di : 0);
       })
-      .catch((e: any) => setErr(e.message))
+      .catch(e => setErr(e.message))
       .finally(() => setLoading(false));
   }, [id]);
 
