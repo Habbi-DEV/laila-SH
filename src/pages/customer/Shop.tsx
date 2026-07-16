@@ -6,7 +6,7 @@ import TopBar from '../../components/customer/TopBar';
 import BottomNav from '../../components/customer/BottomNav';
 import ProductCard from '../../components/customer/ProductCard';
 import Spinner from '../../components/customer/Spinner';
-import { api } from '../../lib/api';
+import { ProductsAPI } from '../../lib/api';
 import type { Product } from '../../lib/types';
 
 interface ShopProduct extends Product {
@@ -41,13 +41,16 @@ export default function Shop() {
     setLoading(true);
     setSelSize(null);
     setShoeSubFilter('all');
-    const url = catTab === 'all' ? '/api/products' : `/api/products?category=${catTab}`;
-    // تعديل: إضافة : any للبيانات والـ e
-    api(url).then((data: any) => {
-      setProducts(data.filter((p: any) => p.status === 'active'));
+    
+    // استخدام ProductsAPI لتمرير الفلاتر بدلاً من بناء الرابط يدوياً
+    const filters = catTab === 'all' ? undefined : { category: catTab };
+    
+    ProductsAPI.getProducts(filters).then((data: ShopProduct[]) => {
+      setProducts(data.filter((p: ShopProduct) => p.status === 'active'));
     }).catch((e: any) => setErr(e.message)).finally(() => setLoading(false));
   }, [catTab]);
 
+  // Sync URL when category param changes
   useEffect(() => {
     if (category && category !== catTab) {
       setCatTab(category);
@@ -60,6 +63,7 @@ export default function Shop() {
     else navigate(`/shop/${key}`, { replace: true });
   };
 
+  // Dynamically compute available sizes from the currently loaded products
   const availableSizes = useMemo(() => {
     const sizeSet = new Set<string>();
     products.forEach(p => {
@@ -72,14 +76,17 @@ export default function Shop() {
     });
   }, [products]);
 
+  // Filter by shoe sub-type (soulier vs sandales) — based on product name keywords
   const afterSubFilter = useMemo(() => {
     if (catTab !== 'shoes' || shoeSubFilter === 'all') return products;
     if (shoeSubFilter === 'sandales') {
       return products.filter(p => /sandale|sandals|mule|tong/i.test(p.name));
     }
+    // soulier = everything in shoes that's not a sandale
     return products.filter(p => !/sandale|sandals|mule|tong/i.test(p.name));
   }, [products, catTab, shoeSubFilter]);
 
+  // Filter by selected size
   const filtered = useMemo(() => {
     if (!selSize) return afterSubFilter;
     return afterSubFilter.filter(p => (p.sizes || []).includes(selSize));
@@ -91,6 +98,7 @@ export default function Shop() {
       <main className="max-w-md mx-auto px-5 pb-28 pt-4">
         <h1 className="font-serif text-2xl mb-4">Boutique</h1>
 
+        {/* Category pills */}
         <div className="flex gap-2 overflow-x-auto no-scrollbar -mx-5 px-5 mb-3">
           {CAT_TABS.map(tab => (
             <button key={tab.key} onClick={() => switchCat(tab.key)}
@@ -102,6 +110,7 @@ export default function Shop() {
           ))}
         </div>
 
+        {/* Shoe sub-filters (only when shoes category is active) */}
         <AnimatePresence>
           {catTab === 'shoes' && (
             <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
@@ -120,6 +129,7 @@ export default function Shop() {
           )}
         </AnimatePresence>
 
+        {/* Dynamic size filter pills */}
         {availableSizes.length > 0 && (
           <div className="flex items-center gap-2 mb-4">
             <div className="flex items-center gap-1 shrink-0 text-ink/40">
@@ -144,10 +154,12 @@ export default function Shop() {
           </div>
         )}
 
+        {/* Results count */}
         {!loading && (
           <p className="text-xs text-ink/40 mb-3">{filtered.length} produit{filtered.length > 1 ? 's' : ''}{selSize && ` · Taille ${selSize}`}</p>
         )}
 
+        {/* Products grid */}
         {loading ? <Spinner className="py-16" /> : err ? (
           <p className="text-sm text-rose text-center py-12">{err}</p>
         ) : filtered.length === 0 ? (
@@ -157,8 +169,7 @@ export default function Shop() {
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-x-3 gap-y-6">
-            {/* تعديل: إضافة : any و : number */}
-            {filtered.map((p: any, i: number) => <ProductCard key={p.id} product={p} index={i} />)}
+            {filtered.map((p, i) => <ProductCard key={p.id} product={p} index={i} />)}
           </div>
         )}
       </main>

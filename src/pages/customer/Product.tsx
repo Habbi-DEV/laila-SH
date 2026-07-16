@@ -5,7 +5,7 @@ import { Check, ShoppingBag, ChevronLeft, ChevronRight } from 'lucide-react';
 import TopBar from '../../components/customer/TopBar';
 import BottomNav from '../../components/customer/BottomNav';
 import Spinner from '../../components/customer/Spinner';
-import { api } from '../../lib/api';
+import { ProductsAPI } from '../../lib/api';
 import { addToCart, effectivePrice } from '../../lib/cart';
 import type { Product, ProductVariant } from '../../lib/types';
 
@@ -22,15 +22,18 @@ export default function ProductPage() {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    if (!id) return;
     setLoading(true);
-    api(`/api/products?id=${id}`)
-      .then((d: any) => { // تعديل: إضافة : any
+    
+    // استخدام ProductsAPI لجلب تفاصيل المنتج بناءً على المعرف
+    ProductsAPI.getProduct(String(id))
+      .then((d: any) => {
         setProduct(d.product);
         setVariants(d.variants || []);
         const di = (d.variants || []).findIndex((v: ProductVariant) => v.is_default);
         setSelVariant(di >= 0 ? di : 0);
       })
-      .catch((e: any) => setErr(e.message)) // تعديل: إضافة (e: any)
+      .catch((e: any) => setErr(e.message))
       .finally(() => setLoading(false));
   }, [id]);
 
@@ -39,7 +42,8 @@ export default function ProductPage() {
   const variant = variants[selVariant];
   const images = variant?.images || [];
   const final = product ? effectivePrice(Number(product.price), Number(product.discount || 0)) : 0;
-  const totalStock = variant?.sizes?.reduce((s: number, x: any) => s + Number(x.stock || 0), 0) || 0; // تعديل: إضافة : any
+  const stockFor = (size: string) => variant?.sizes?.find(s => s.size === size)?.stock || 0;
+  const totalStock = variant?.sizes?.reduce((s, x) => s + Number(x.stock || 0), 0) || 0;
 
   const handleAdd = () => {
     if (!product || !variant) return;
@@ -56,7 +60,7 @@ export default function ProductPage() {
 
   const scrollBy = (d: number) => {
     scrollRef.current?.scrollBy({ left: d, behavior: 'smooth' });
-    setImgIdx((i: number) => Math.max(0, Math.min(images.length - 1, i + (d > 0 ? 1 : -1)))); // تعديل: إضافة : number
+    setImgIdx(i => Math.max(0, Math.min(images.length - 1, i + (d > 0 ? 1 : -1))));
   };
 
   if (loading) return (<div className="min-h-screen bg-softgray"><TopBar showBack /><Spinner className="py-32" /></div>);
@@ -104,7 +108,7 @@ export default function ProductPage() {
                 <span className="text-sm text-ink/60">{variant?.color_name}</span>
               </div>
               <div className="flex gap-3 flex-wrap">
-                {variants.map((v: any, i: number) => ( // تعديل: إضافة : any و : number
+                {variants.map((v, i) => (
                   <button key={v.id || i} onClick={() => setSelVariant(i)} className="tap relative">
                     <span className={`block w-9 h-9 rounded-full ring-1 transition-all ${selVariant === i ? 'ring-2 ring-burgundy ring-offset-2 ring-offset-white' : 'ring-bordergray'}`} style={{ background: v.color_hex }} />
                     {v.is_default && <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-gold ring-2 ring-white" />}
@@ -121,7 +125,7 @@ export default function ProductPage() {
                 <span className="text-xs text-ink/50">Stock total: {totalStock}</span>
               </div>
               <div className="grid grid-cols-6 gap-2">
-                {variant.sizes.map((s: any) => { // تعديل: إضافة : any
+                {variant.sizes.map(s => {
                   const out = Number(s.stock) <= 0;
                   const sel = selSize === s.size;
                   return (

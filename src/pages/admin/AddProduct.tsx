@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, Plus, Trash2, Star, ImagePlus, X, Check, Eye } from 'lucide-react';
 import AdminShell from '../../components/admin/AdminShell';
 import Spinner from '../../components/customer/Spinner';
-import { endpoints } from '../../lib/api';
+import { ProductsAPI, UploadAPI } from '../../lib/api';
 import { effectivePrice } from '../../lib/cart';
 import { SHOE_SIZES, BAG_SIZES } from '../../lib/types';
 import type { Category, ProductVariant } from '../../lib/types';
@@ -45,16 +45,15 @@ export default function AdminAddProduct() {
   const [previewColor, setPreviewColor] = useState(0);
 
   useEffect(() => {
-    endpoints.categories.getAll().then((cats: Category[]) => {
+    ProductsAPI.getCategories().then((cats: Category[]) => {
       setCategories(cats);
       if (!isEdit && cats.length) {
         setCategoryId(cats[0].id);
         setVariants([blankVariant(sizeSetFor(cats[0].slug))]);
       }
     });
-    
     if (isEdit) {
-      endpoints.products.getOne(id as string).then(d => {
+      ProductsAPI.getProductById(id!).then(d => {
         setName(d.product.name);
         setDescription(d.product.description || '');
         setCategoryId(d.product.category_id);
@@ -71,7 +70,7 @@ export default function AdminAddProduct() {
         setLoading(false);
       }).catch(e => { setErr(e.message); setLoading(false); });
     }
-  }, [id, isEdit]);
+  }, [id]);
 
   const sizeSetFor = (slug: string) => slug === 'bags' ? BAG_SIZES : SHOE_SIZES;
   const selectedCat = categories.find(c => c.id === Number(categoryId));
@@ -105,7 +104,7 @@ export default function AdminAddProduct() {
     reader.onload = async () => {
       const base64 = (reader.result as string).split(',')[1];
       try {
-        const { url } = await endpoints.upload({ fileName: file.name, fileBase64: base64, contentType: file.type });
+        const { url } = await UploadAPI.uploadImage(file.name, base64, file.type);
         updateVariant(vIdx, { images: [...variants[vIdx].images, url] });
       } catch (e: any) { setErr('Upload échoué: ' + e.message); }
     };
@@ -146,20 +145,17 @@ export default function AdminAddProduct() {
         name, description, category_id: Number(categoryId),
         price: Number(price), discount: Number(discount) || 0, status, featured,
       };
-      
       if (isEdit) {
-        await endpoints.products.update({ id: productId, ...payload });
+        await ProductsAPI.updateProduct({ id: productId, ...payload });
       } else {
-        const created = await endpoints.products.create(payload);
+        const created = await ProductsAPI.createProduct(payload);
         productId = created.id;
       }
-      
       const vrows = vs.map(v => ({
         product_id: productId, color_name: v.color_name, color_hex: v.color_hex,
         color_type: v.color_type, is_default: v.is_default, images: v.images, sizes: v.sizes,
       }));
-      
-      await endpoints.variants.update({ product_id: productId, variants: vrows });
+      await ProductsAPI.updateVariants(productId, vrows);
       navigate('/admin/products');
     } catch (e: any) { setErr(e.message); setSaving(false); }
   };

@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { Package, ShoppingBag, DollarSign, Clock, Plus, ArrowRight, TrendingUp, PackageCheck, Undo2 } from 'lucide-react';
 import AdminShell from '../../components/admin/AdminShell';
 import Spinner from '../../components/customer/Spinner';
-import { endpoints } from '../../lib/api';
+import { SystemAPI } from '../../lib/api';
 
 interface Stats {
   products: number; orders: number; revenue: number; pending: number;
@@ -40,9 +40,21 @@ export default function AdminDashboard() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState('');
-  
-  useEffect(() => { 
-    endpoints.stats.get().then(setStats).catch(e => setErr(e.message)).finally(() => setLoading(false)); 
+  useEffect(() => {
+    SystemAPI.getStats()
+      .then(d => setStats({
+        products: d.products,
+        orders: d.orders,
+        revenue: d.revenue,
+        pending: d.pending,
+        delivered: d.delivered,
+        shipped: d.shipped,
+        returned: d.returned,
+        deliveryRate: d.delivery_rate,
+        recent: d.recent_orders,
+      }))
+      .catch(e => setErr(e.message))
+      .finally(() => setLoading(false));
   }, []);
 
   const cards = [

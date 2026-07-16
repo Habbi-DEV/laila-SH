@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { AlertTriangle, GitMerge, Check, Home, Store, Ban, ShieldAlert, Undo2, RotateCcw, Eye, EyeOff, Truck, FileText, Package } from 'lucide-react';
 import AdminShell from '../../components/admin/AdminShell';
 import Spinner from '../../components/customer/Spinner';
-import { endpoints } from '../../lib/api'; // تم التحديث[cite: 32]
+import { OrdersAPI, UsersAPI } from '../../lib/api';
 import type { Order } from '../../lib/types';
 
 const statusLabel: Record<string, string> = {
@@ -35,10 +35,7 @@ export default function AdminOrders() {
 
   const refresh = () => {
     setLoading(true);
-    endpoints.orders.get() // تم التحديث[cite: 32]
-      .then(setOrders)
-      .catch(e => setErr(e.message))
-      .finally(() => setLoading(false));
+    OrdersAPI.getOrders().then(setOrders).catch(e => setErr(e.message)).finally(() => setLoading(false));
   };
   useEffect(() => { refresh(); }, []);
 
@@ -68,14 +65,14 @@ export default function AdminOrders() {
   const advance = async (o: Order) => {
     const idx = flow.indexOf(o.status);
     const next = idx >= 0 && idx < flow.length - 1 ? flow[idx + 1] : o.status;
-    await endpoints.orders.updateStatus({ id: o.id, status: next }); // تم التحديث[cite: 32]
+    await OrdersAPI.updateOrderStatus(o.id, next);
     refresh();
   };
 
   const changeStatus = async (o: Order, status: string) => {
     setActionLoading(o.id);
     try {
-      await endpoints.orders.updateStatus({ id: o.id, status }); // تم التحديث[cite: 32]
+      await OrdersAPI.updateOrderStatus(o.id, status);
       refresh();
     } catch (e: any) { setErr(e.message); }
     setActionLoading(null);
@@ -84,7 +81,7 @@ export default function AdminOrders() {
   const sendToShipping = async (o: Order) => {
     setShippingLoading(o.id);
     try {
-      await endpoints.shipping.create({ order_id: o.id }); // تم التحديث[cite: 32]
+      await OrdersAPI.createShippingParcel(o.id);
       refresh();
     } catch (e: any) { setErr(e.message); }
     setShippingLoading(null);
@@ -93,7 +90,7 @@ export default function AdminOrders() {
   const toggleBlacklist = async (o: Order, blacklist: boolean) => {
     setBlacklistLoading(o.phone);
     try {
-      await endpoints.customers.updateBlacklist({ phone: o.phone, is_blacklisted: blacklist, name: o.customer_name }); // تم التحديث[cite: 32]
+      await UsersAPI.updateCustomer({ phone: o.phone, is_blacklisted: blacklist, name: o.customer_name });
       refresh();
     } catch (e: any) { setErr(e.message); }
     setBlacklistLoading(null);
@@ -114,7 +111,7 @@ export default function AdminOrders() {
     if (!secondaryIds.length) { setMergeErr('Aucune commande secondaire à fusionner'); return; }
     setMerging(true); setMergeErr('');
     try {
-      await endpoints.orders.merge({ primary_id: mergePrimaryId, secondary_ids: secondaryIds }); // تم التحديث[cite: 32]
+      await OrdersAPI.mergeOrders(mergePrimaryId, secondaryIds);
       setMergeTarget(null); setMergePrimaryId(null);
       refresh();
     } catch (e: any) { setMergeErr(e.message); }

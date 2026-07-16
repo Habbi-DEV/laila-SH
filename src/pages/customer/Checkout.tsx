@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { Truck, Banknote, Check, Home, Store, MapPin } from 'lucide-react';
 import TopBar from '../../components/customer/TopBar';
 import { getCart, cartTotal, clearCart } from '../../lib/cart';
-import { endpoints } from '../../lib/api'; // تم التحديث
+import { OrdersAPI } from '../../lib/api'; // استيراد الأداة الموحدة الجديدة
 import type { Wilaya } from '../../lib/types';
 
 export default function Checkout() {
@@ -12,13 +12,32 @@ export default function Checkout() {
   const items = getCart();
   const productsTotal = cartTotal();
   const [wilayas, setWilayas] = useState<Wilaya[]>([]);
-  const [form, setForm] = useState({ name: '', phone: '', address: '', city: '', wilaya_id: '', delivery_type: 'home' });
+  
+  // تحديد أنواع البيانات لحقول الفورم لتكون مطابقة لـ TypeScript
+  const [form, setForm] = useState<{
+    name: string;
+    phone: string;
+    address: string;
+    city: string;
+    wilaya_id: string;
+    delivery_type: 'home' | 'desk';
+  }>({ 
+    name: '', 
+    phone: '', 
+    address: '', 
+    city: '', 
+    wilaya_id: '', 
+    delivery_type: 'home' 
+  });
+  
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState('');
 
-  // استخدام endpoints.wilayas.get لجلب الولايات
+  // جلب الولايات عبر OrdersAPI
   useEffect(() => { 
-    endpoints.wilayas.get().then(setWilayas).catch(() => {}); 
+    OrdersAPI.getWilayas()
+      .then(setWilayas)
+      .catch(() => {}); 
   }, []);
 
   const selectedWilaya = wilayas.find(w => w.id === Number(form.wilaya_id));
@@ -28,32 +47,54 @@ export default function Checkout() {
   const grandTotal = productsTotal + shippingPrice;
 
   if (items.length === 0 && !loading) {
-    return (<div className="min-h-screen bg-softgray"><TopBar showBack /><div className="max-w-md mx-auto px-5 pt-32 text-center"><p className="text-ink/50">Votre panier est vide.</p></div></div>);
+    return (
+      <div className="min-h-screen bg-softgray">
+        <TopBar showBack />
+        <div className="max-w-md mx-auto px-5 pt-32 text-center">
+          <p className="text-ink/50">Votre panier est vide.</p>
+        </div>
+      </div>
+    );
   }
 
   const set = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }));
 
   const submit = async () => {
     setErr('');
-    if (!form.name || !form.phone || !form.address || !form.city) { setErr('Veuillez remplir tous les champs'); return; }
-    if (!form.wilaya_id) { setErr('Veuillez sélectionner votre wilaya'); return; }
-    if (!/^\d{8,}$/.test(form.phone.replace(/\s/g, ''))) { setErr('Numéro de téléphone invalide'); return; }
+    if (!form.name || !form.phone || !form.address || !form.city) { 
+      setErr('Veuillez remplir tous les champs'); 
+      return; 
+    }
+    if (!form.wilaya_id) { 
+      setErr('Veuillez sélectionner votre wilaya'); 
+      return; 
+    }
+    if (!/^\d{8,}$/.test(form.phone.replace(/\s/g, ''))) { 
+      setErr('Numéro de téléphone invalide'); 
+      return; 
+    }
     setLoading(true);
+    
     try {
-      // استخدام endpoints.orders.create مع تمرير البيانات مباشرة
-      const order = await endpoints.orders.create({
-        customer_name: form.name, 
-        phone: form.phone, 
-        address: form.address, 
+      // إرسال الطلب عبر OrdersAPI المعرّف في الـ api.ts
+      const order = await OrdersAPI.createOrder({
+        customer_name: form.name,
+        phone: form.phone,
+        address: form.address,
         city: form.city,
-        payment_method: 'cod', 
-        items, 
-        wilaya_id: Number(form.wilaya_id), 
+        items,
+        wilaya_id: Number(form.wilaya_id),
+        wilaya_name: selectedWilaya?.name || '',
         delivery_type: form.delivery_type,
+        payment_method: 'cod',
       });
+      
       clearCart();
       navigate(`/order/${order.id}`);
-    } catch (e: any) { setErr(e.message); setLoading(false); }
+    } catch (e: any) { 
+      setErr(e.message); 
+      setLoading(false); 
+    }
   };
 
   const field = (k: string, label: string, type = 'text') => (

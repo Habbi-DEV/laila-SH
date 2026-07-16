@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { Package, Save, RotateCcw, TrendingUp, X } from 'lucide-react';
 import AdminShell from '../../components/admin/AdminShell';
 import Spinner from '../../components/customer/Spinner';
-import { endpoints } from '../../lib/api';
+import { ProductsAPI } from '../../lib/api';
 
 interface InventoryVariant {
   id: number;
@@ -42,7 +42,7 @@ export default function AdminInventory() {
 
   const refresh = () => {
     setLoading(true);
-    endpoints.inventory.get().then((data: { products: InventoryProduct[]; logs: StockLog[] }) => {
+    ProductsAPI.getInventory().then((data: { products: InventoryProduct[]; logs: StockLog[] }) => {
       setProducts(data.products);
       setLogs(data.logs);
     }).catch(e => setErr(e.message)).finally(() => setLoading(false));
@@ -59,7 +59,7 @@ export default function AdminInventory() {
     if (val === undefined) return;
     setSaving(key);
     try {
-      await endpoints.inventory.updateStock({ variant_id: variantId, size, stock: Number(val) });
+      await ProductsAPI.updateStock(variantId, size, Number(val));
       setEditing(e => { const n = { ...e }; delete n[key]; return n; });
       refresh();
     } catch (e: any) { setErr(e.message); }

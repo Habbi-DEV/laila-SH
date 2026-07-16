@@ -10,13 +10,16 @@ import type { CartItem } from '../../lib/types';
 export default function Cart() {
   const [items, setItems] = useState<CartItem[]>([]);
   const navigate = useNavigate();
+  
   const refresh = () => setItems(getCart());
+  
   useEffect(() => {
     refresh();
     const h = () => refresh();
     window.addEventListener('cart-changed', h);
     return () => window.removeEventListener('cart-changed', h);
   }, []);
+  
   const total = items.reduce((s, i) => s + i.qty * i.price, 0);
 
   return (
@@ -64,7 +67,7 @@ export default function Cart() {
             </div>
             <div className="mt-5 bg-white rounded-2xl p-4 shadow-soft space-y-2">
               <div className="flex justify-between text-sm text-ink/70"><span>Sous-total</span><span>{total.toFixed(0)} DA</span></div>
-              <div className="flex justify-between text-sm text-ink/70"><span>Livraison</span><span className="text-gold">Offerte</span></div>
+              <div className="flex justify-between text-sm text-ink/70"><span>Livraison</span><span className="text-gold text-xs">Calculée à l'étape suivante</span></div>
               <div className="gold-line my-1" />
               <div className="flex justify-between font-semibold"><span>Total</span><span className="text-burgundy">{total.toFixed(0)} DA</span></div>
             </div>

@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { Plus, Pencil, Trash2, Search } from 'lucide-react';
 import AdminShell from '../../components/admin/AdminShell';
 import Spinner from '../../components/customer/Spinner';
-import { endpoints } from '../../lib/api'; // تم التحديث لاستخدام endpoints[cite: 32]
+import { ProductsAPI } from '../../lib/api';
 import { effectivePrice } from '../../lib/cart';
 import type { Product } from '../../lib/types';
 
@@ -13,27 +13,13 @@ export default function AdminProducts() {
   const [loading, setLoading] = useState(true);
   const [q, setQ] = useState('');
   const [err, setErr] = useState('');
-
-  // استخدام endpoints.products.get لجلب البيانات[cite: 32]
-  const refresh = () => { 
-    setLoading(true); 
-    endpoints.products.get()
-      .then(setProducts)
-      .catch(e => setErr(e.message))
-      .finally(() => setLoading(false)); 
-  };
-
+  const refresh = () => { setLoading(true); ProductsAPI.getProducts().then(setProducts).catch(e => setErr(e.message)).finally(() => setLoading(false)); };
   useEffect(() => { refresh(); }, []);
 
-  // استخدام endpoints.products.delete لحذف المنتج[cite: 32]
   const del = async (id: number) => {
     if (!confirm('Supprimer ce produit ?')) return;
-    try {
-      await endpoints.products.delete(id);
-      refresh();
-    } catch (e: any) {
-      setErr(e.message);
-    }
+    await ProductsAPI.deleteProduct(id);
+    refresh();
   };
 
   const filtered = products.filter(p => p.name.toLowerCase().includes(q.toLowerCase()));

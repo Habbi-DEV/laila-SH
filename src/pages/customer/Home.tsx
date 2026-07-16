@@ -6,7 +6,7 @@ import TopBar from '../../components/customer/TopBar';
 import BottomNav from '../../components/customer/BottomNav';
 import ProductCard from '../../components/customer/ProductCard';
 import Spinner from '../../components/customer/Spinner';
-import { endpoints } from '../../lib/api'; // تم التحديث لاستخدام endpoints
+import { ProductsAPI } from '../../lib/api';
 import type { Product, Category } from '../../lib/types';
 
 export default function Home() {
@@ -16,10 +16,9 @@ export default function Home() {
   const [err, setErr] = useState('');
 
   useEffect(() => {
-    // استخدام endpoints لجلب المنتجات والفئات بالتوازي
     Promise.all([
-      endpoints.products.get().then(setProducts),
-      endpoints.categories.get().then(setCategories),
+      ProductsAPI.getProducts().then(setProducts),
+      ProductsAPI.getCategories().then(setCategories),
     ]).catch(e => setErr(e.message)).finally(() => setLoading(false));
   }, []);
 
@@ -67,20 +66,20 @@ export default function Home() {
         </section>
 
         <section className="mt-9">
-                  <div className="flex items-center justify-between mb-3">
-                    <h2 className="font-serif text-xl">Coups de cœur</h2>
-                    <Link to="/shop" className="text-xs text-burgundy tracking-wide">Tout voir</Link>
-                  </div>
-                  {loading ? <Spinner className="py-16" /> : err ? (
-                    <p className="text-sm text-rose text-center py-12">{err}</p>
-                  ) : list.length === 0 ? (
-                    <p className="text-sm text-ink/40 text-center py-12">Aucun produit pour le moment</p>
-                  ) : (
-                    <div className="grid grid-cols-2 gap-x-3 gap-y-6">
-                      {list.map((p, i) => <ProductCard key={p.id} product={p} index={i} />)}
-                    </div>
-                  )}
-                </section>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="font-serif text-xl">Coups de cœur</h2>
+            <Link to="/shop" className="text-xs text-burgundy tracking-wide">Tout voir</Link>
+          </div>
+          {loading ? <Spinner className="py-16" /> : err ? (
+            <p className="text-sm text-rose text-center py-12">{err}</p>
+          ) : list.length === 0 ? (
+            <p className="text-sm text-ink/40 text-center py-12">Aucun produit pour le moment</p>
+          ) : (
+            <div className="grid grid-cols-2 gap-x-3 gap-y-6">
+              {list.map((p, i) => <ProductCard key={p.id} product={p} index={i} />)}
+            </div>
+          )}
+        </section>
 
         {!loading && newest.length > 0 && (
           <section className="mt-9">
