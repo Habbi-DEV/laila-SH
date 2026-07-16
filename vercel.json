@@ -8,8 +8,8 @@
     "SHIPPING_API_KEY": "",
     "SHIPPING_API_TOKEN": ""
     
-    
-    
-    
-  }
+},
+  "rewrites": [
+    { "source": "/((?!api/).*)", "destination": "/index.html" }
+  ]
 }
