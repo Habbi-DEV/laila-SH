@@ -6,7 +6,7 @@ import TopBar from '../../components/customer/TopBar';
 import BottomNav from '../../components/customer/BottomNav';
 import ProductCard from '../../components/customer/ProductCard';
 import Spinner from '../../components/customer/Spinner';
-import { endpoints } from '../../lib/api'; // تم التحديث لاستخدام endpoints
+import { api } from '../../lib/api';
 import type { Product } from '../../lib/types';
 
 interface ShopProduct extends Product {
@@ -41,14 +41,11 @@ export default function Shop() {
     setLoading(true);
     setSelSize(null);
     setShoeSubFilter('all');
-    
-    // استخدام endpoints.products.get لجلب المنتجات
-    endpoints.products.get({ category: catTab === 'all' ? undefined : catTab })
-      .then((data: ShopProduct[]) => {
-        setProducts(data.filter((p: ShopProduct) => p.status === 'active'));
-      })
-      .catch(e => setErr(e.message))
-      .finally(() => setLoading(false));
+    const url = catTab === 'all' ? '/api/products' : `/api/products?category=${catTab}`;
+    // تعديل: إضافة : any للبيانات والـ e
+    api(url).then((data: any) => {
+      setProducts(data.filter((p: any) => p.status === 'active'));
+    }).catch((e: any) => setErr(e.message)).finally(() => setLoading(false));
   }, [catTab]);
 
   useEffect(() => {
@@ -160,7 +157,8 @@ export default function Shop() {
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-x-3 gap-y-6">
-            {filtered.map((p, i) => <ProductCard key={p.id} product={p} index={i} />)}
+            {/* تعديل: إضافة : any و : number */}
+            {filtered.map((p: any, i: number) => <ProductCard key={p.id} product={p} index={i} />)}
           </div>
         )}
       </main>
