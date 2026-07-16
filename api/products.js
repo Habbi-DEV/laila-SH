@@ -1,5 +1,5 @@
-import supabase from './db-client.js';
-import { verifyAdmin } from './verify-admin.js';
+import supabase from './_utils/db-client.js';
+import { verifyAdmin } from './_utils/verify-admin.js';
 
 // --- دوال مساعدة (من ملف products القديم) ---
 function withCategoryName(products, categories) {
