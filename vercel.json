@@ -1,14 +1,4 @@
 {
-  "env": {
-    "NEXT_PUBLIC_SUPABASE_URL": "https://ymmbhfxfxoclmxoixrls.supabase.co",
-    "NEXT_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_y8-rcHN2kB2Fd3cjW-EIKQ_dWCddWJr",
-    "SUPABASE_SERVICE_ROLE_KEY": "sb_secret_jcPU1lqxCDpFIpUgG06rbQ_89xMLQ-0",
-    "VITE_SUPABASE_URL": "https://ymmbhfxfxoclmxoixrls.supabase.co",
-    "VITE_SUPABASE_ANON_KEY": "sb_publishable_y8-rcHN2kB2Fd3cjW-EIKQ_dWCddWJr",
-    "SHIPPING_API_KEY": "",
-    "SHIPPING_API_TOKEN": ""
-    
-},
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
   ]
