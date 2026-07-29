@@ -60,6 +60,14 @@ export interface Wilaya {
   desk_shipping_price: number;
 }
 
+export interface Commune {
+  id: number;
+  wilaya_id: number;
+  name: string;
+  name_ar?: string | null;
+  daira_name?: string | null;
+}
+
 export interface OrderShipping {
   id: number;
   order_id: number;
@@ -85,6 +93,7 @@ export interface Order {
   phone: string;
   address: string;
   city: string;
+  commune_id?: number | null;
   total: number;
   payment_method: string;
   status: string;
