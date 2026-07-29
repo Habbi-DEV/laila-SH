@@ -46,7 +46,7 @@ export default function Home() {
           </div>
         </motion.section>
 
-        <section className="mt-8">
+        <section className="-mt-6 relative z-10">
           <h2 className="font-serif text-xl mb-3">Catégories</h2>
           <div className="grid grid-cols-2 gap-3">
             {categories.map((c, i) => (
