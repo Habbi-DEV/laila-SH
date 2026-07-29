@@ -1,54 +1,54 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import type { Product } from '../lib/types';
+import type { Product } from '../../lib/types';
+import { effectivePrice } from '../../lib/cart';
 
-export default function ProductCard({ product, index = 0 }: { product: Product; index?: number }) {
-  const variant = product.variants.find(v => v.is_default) || product.variants[0];
-  const image = variant?.images?.[0] || '/images/placeholder.jpg';
-  const price = product.discount_price ?? product.price;
-  const hasDiscount = product.discount_price !== null && product.discount_price < product.price;
+interface CardProduct extends Product { cover_image?: string; in_stock?: boolean }
 
-  const totalStock = product.variants.reduce((sum, v) =>
-    sum + Object.values(v.sizes || {}).reduce((s, n) => s + Number(n), 0), 0);
-
+export default function ProductCard({ product, index = 0 }: { product: CardProduct; index?: number }) {
+  const final = effectivePrice(Number(product.price), Number(product.discount || 0));
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, delay: index * 0.05 }}
-    >
-      <Link to={`/product/${product.id}`} className="block group">
-        <div className="relative aspect-[3/4] rounded-2xl overflow-hidden bg-sand shadow-sm">
-          <img
-            src={image}
-            alt={product.title}
-            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-            loading="lazy"
-          />
-          <span className="piece-tag absolute top-2 left-2">
-            N° {String(index + 1).padStart(3, '0')}
-          </span>
-          {hasDiscount && (
-            <span className="absolute top-2 right-2 bg-burgundy text-white text-[10px] font-bold px-2 py-1 rounded-full">
-              -{Math.round((1 - price / product.price) * 100)}%
-            </span>
+    <Link to={`/product/${product.id}`} className="block">
+      <motion.div
+        initial={{ opacity: 0, y: 14 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: '-40px' }}
+        transition={{ duration: 0.5, delay: (index % 4) * 0.06 }}
+        className="group"
+      >
+        <div className="relative aspect-[4/5] rounded-2xl overflow-hidden bg-sand shadow-[0_8px_30px_-12px_rgba(0,0,0,0.10)]">
+          {product.cover_image ? (
+            <img src={product.cover_image} alt={product.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+          ) : (
+            <div className="w-full h-full shimmer" />
           )}
-          {totalStock === 0 && (
+          <span className="piece-tag absolute top-3 left-3">N° {String(index + 1).padStart(3, '0')}</span>
+          {Number(product.discount) > 0 && (
+            <span className="absolute top-3 right-3 bg-white/90 backdrop-blur text-burgundy text-[10px] font-semibold tracking-wide px-2.5 py-1 rounded-full">−{product.discount}%</span>
+          )}
+          {product.in_stock === false && (
             <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-              <span className="text-white text-sm font-semibold bg-ink px-3 py-1 rounded-full">Épuisé</span>
+              <span className="bg-ink text-white text-[11px] font-medium tracking-wide px-3 py-1.5 rounded-full">Épuisé</span>
             </div>
           )}
         </div>
-        <div className="mt-2 px-1">
-          <h3 className="font-serif text-sm text-ink line-clamp-1">{product.title}</h3>
-          <div className="flex items-center gap-2 mt-0.5">
-            <span className="text-burgundy font-semibold text-sm">{price.toLocaleString('fr-FR')} DA</span>
-            {hasDiscount && (
-              <span className="text-gray-400 text-xs line-through">{product.price.toLocaleString('fr-FR')} DA</span>
+        <div className="mt-3 px-0.5">
+          <h3 className="font-serif text-[15px] leading-snug text-ink truncate">{product.name}</h3>
+          <div className="flex items-center justify-between mt-1">
+            <div className="flex items-baseline gap-1.5">
+              {Number(product.discount) > 0 && <span className="text-xs text-ink/40 line-through">{Number(product.price).toFixed(0)} DA</span>}
+              <span className="text-sm font-semibold text-burgundy">{final.toFixed(0)} DA</span>
+            </div>
+            {product.colors && product.colors.length > 0 && (
+              <div className="flex -space-x-1">
+                {product.colors.slice(0, 4).map((c, i) => (
+                  <span key={i} className="w-3 h-3 rounded-full ring-1 ring-white" style={{ background: c.hex }} />
+                ))}
+              </div>
             )}
           </div>
         </div>
-      </Link>
-    </motion.div>
+      </motion.div>
+    </Link>
   );
 }
