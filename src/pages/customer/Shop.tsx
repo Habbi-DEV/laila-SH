@@ -1,179 +1,208 @@
-import { useEffect, useMemo, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useState, useEffect, useMemo } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { SlidersHorizontal, X } from 'lucide-react';
-import TopBar from '../../components/customer/TopBar';
-import BottomNav from '../../components/customer/BottomNav';
-import ProductCard from '../../components/customer/ProductCard';
-import Spinner from '../../components/customer/Spinner';
-import { ProductsAPI } from '../../lib/api';
-import type { Product } from '../../lib/types';
+import { X } from 'lucide-react';
+import { api } from '../lib/api';
+import type { Product, Category } from '../lib/types';
+import { SANDALE_KEYWORDS } from '../lib/types';
+import ProductCard from '../components/ProductCard';
 
-interface ShopProduct extends Product {
-  cover_image?: string;
-  in_stock?: boolean;
-  sizes?: string[];
-}
-
-const CAT_TABS = [
-  { key: 'all', label: 'Tout' },
-  { key: 'shoes', label: 'Soulier & Sandales' },
-  { key: 'bags', label: 'Sacs' },
-];
-
-const SHOE_SUBFILTERS = [
-  { key: 'all', label: 'Tous' },
-  { key: 'soulier', label: 'Soulier' },
-  { key: 'sandales', label: 'Sandales' },
-];
+type CatFilter = 'all' | 'shoes' | 'bags';
+type ShoeFilter = 'all' | 'soulier' | 'sandales';
 
 export default function Shop() {
-  const { category } = useParams();
-  const navigate = useNavigate();
-  const [products, setProducts] = useState<ShopProduct[]>([]);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
-  const [err, setErr] = useState('');
-  const [catTab, setCatTab] = useState<string>(category || 'all');
-  const [shoeSubFilter, setShoeSubFilter] = useState<string>('all');
-  const [selSize, setSelSize] = useState<string | null>(null);
+  const [catFilter, setCatFilter] = useState<CatFilter>('all');
+  const [shoeFilter, setShoeFilter] = useState<ShoeFilter>('all');
+  const [selectedSize, setSelectedSize] = useState<string | null>(null);
 
   useEffect(() => {
-    setLoading(true);
-    setSelSize(null);
-    setShoeSubFilter('all');
-    
-    // استخدام ProductsAPI لتمرير الفلاتر بدلاً من بناء الرابط يدوياً
-    const filters = catTab === 'all' ? undefined : { category: catTab };
-    
-    ProductsAPI.getProducts(filters).then((data: ShopProduct[]) => {
-      setProducts(data.filter((p: ShopProduct) => p.status === 'active'));
-    }).catch((e: any) => setErr(e.message)).finally(() => setLoading(false));
-  }, [catTab]);
+    Promise.all([
+      api.getProducts({ status: 'active' }),
+      api.getCategories(),
+    ]).then(([p, c]) => {
+      setProducts(p);
+      setCategories(c);
+      const catSlug = searchParams.get('category');
+      if (catSlug === 'shoes') setCatFilter('shoes');
+      else if (catSlug === 'bags') setCatFilter('bags');
+    }).catch(console.error).finally(() => setLoading(false));
+  }, []);
 
-  // Sync URL when category param changes
-  useEffect(() => {
-    if (category && category !== catTab) {
-      setCatTab(category);
-    }
-  }, [category]);
+  const catBySlug = useMemo(() => {
+    const map: Record<string, Category> = {};
+    categories.forEach(c => { map[c.slug] = c; });
+    return map;
+  }, [categories]);
 
-  const switchCat = (key: string) => {
-    setCatTab(key);
-    if (key === 'all') navigate('/shop', { replace: true });
-    else navigate(`/shop/${key}`, { replace: true });
-  };
+  // Filter products by category
+  const catFiltered = useMemo(() => {
+    if (catFilter === 'all') return products;
+    const cat = catBySlug[catFilter];
+    if (!cat) return products;
+    return products.filter(p => p.category_id === cat.id);
+  }, [products, catFilter, catBySlug]);
 
-  // Dynamically compute available sizes from the currently loaded products
+  // Apply shoe sub-filter
+  const shoeFiltered = useMemo(() => {
+    if (catFilter !== 'shoes' || shoeFilter === 'all') return catFiltered;
+    return catFiltered.filter(p => {
+      const titleLower = p.title.toLowerCase();
+      const isSandale = SANDALE_KEYWORDS.some(kw => titleLower.includes(kw));
+      return shoeFilter === 'sandales' ? isSandale : !isSandale;
+    });
+  }, [catFiltered, catFilter, shoeFilter]);
+
+  // Compute available sizes from current product set
   const availableSizes = useMemo(() => {
     const sizeSet = new Set<string>();
-    products.forEach(p => {
-      (p.sizes || []).forEach(s => sizeSet.add(s));
+    shoeFiltered.forEach(p => {
+      p.variants.forEach(v => {
+        Object.entries(v.sizes || {}).forEach(([size, stock]) => {
+          if (Number(stock) > 0) sizeSet.add(size);
+        });
+      });
     });
-    return [...sizeSet].sort((a, b) => {
-      const na = Number(a), nb = Number(b);
-      if (!isNaN(na) && !isNaN(nb)) return na - nb;
-      return a.localeCompare(b);
-    });
-  }, [products]);
+    return Array.from(sizeSet).sort((a, b) => Number(a) - Number(b));
+  }, [shoeFiltered]);
 
-  // Filter by shoe sub-type (soulier vs sandales) — based on product name keywords
-  const afterSubFilter = useMemo(() => {
-    if (catTab !== 'shoes' || shoeSubFilter === 'all') return products;
-    if (shoeSubFilter === 'sandales') {
-      return products.filter(p => /sandale|sandals|mule|tong/i.test(p.name));
-    }
-    // soulier = everything in shoes that's not a sandale
-    return products.filter(p => !/sandale|sandals|mule|tong/i.test(p.name));
-  }, [products, catTab, shoeSubFilter]);
+  // Apply size filter
+  const finalProducts = useMemo(() => {
+    if (!selectedSize) return shoeFiltered;
+    return shoeFiltered.filter(p =>
+      p.variants.some(v => Number((v.sizes || {})[selectedSize]) > 0)
+    );
+  }, [shoeFiltered, selectedSize]);
 
-  // Filter by selected size
-  const filtered = useMemo(() => {
-    if (!selSize) return afterSubFilter;
-    return afterSubFilter.filter(p => (p.sizes || []).includes(selSize));
-  }, [afterSubFilter, selSize]);
+  const handleCatChange = (cat: CatFilter) => {
+    setCatFilter(cat);
+    setShoeFilter('all');
+    setSelectedSize(null);
+    setSearchParams(cat === 'all' ? {} : { category: cat });
+  };
+
+  const pills: { key: CatFilter; label: string }[] = [
+    { key: 'all', label: 'Tout' },
+    { key: 'shoes', label: 'Soulier & Sandales' },
+    { key: 'bags', label: 'Sacs' },
+  ];
+
+  const shoePills: { key: ShoeFilter; label: string }[] = [
+    { key: 'all', label: 'Tous' },
+    { key: 'soulier', label: 'Soulier' },
+    { key: 'sandales', label: 'Sandales' },
+  ];
 
   return (
-    <div className="min-h-screen bg-softgray">
-      <TopBar title="Boutique" />
-      <main className="max-w-md mx-auto px-5 pb-28 pt-4">
-        <h1 className="font-serif text-2xl mb-4">Boutique</h1>
-
-        {/* Category pills */}
-        <div className="flex gap-2 overflow-x-auto no-scrollbar -mx-5 px-5 mb-3">
-          {CAT_TABS.map(tab => (
-            <button key={tab.key} onClick={() => switchCat(tab.key)}
-              className={`tap shrink-0 h-9 px-4 rounded-full text-sm font-medium border transition-all ${catTab === tab.key
-                ? 'border-burgundy bg-burgundy text-white'
-                : 'border-bordergray bg-white text-ink/60'}`}>
-              {tab.label}
-            </button>
-          ))}
+    <div className="min-h-screen bg-cream pb-20">
+      {/* Header */}
+      <div className="bg-white sticky top-0 z-30 border-b border-sandline">
+        <div className="max-w-md mx-auto px-4 py-3">
+          <h1 className="font-serif text-xl text-ink text-center">Boutique</h1>
         </div>
-
-        {/* Shoe sub-filters (only when shoes category is active) */}
+        {/* Category Pills */}
+        <div className="px-4 pb-3">
+          <div className="flex gap-2 overflow-x-auto no-scrollbar">
+            {pills.map(p => (
+              <button
+                key={p.key}
+                onClick={() => handleCatChange(p.key)}
+                className={`px-4 py-2 rounded-full text-xs font-medium whitespace-nowrap transition-all ${
+                  catFilter === p.key
+                    ? 'bg-burgundy text-white shadow-md'
+                    : 'bg-sand text-ink/60 hover:bg-sandline'
+                }`}
+              >
+                {p.label}
+              </button>
+            ))}
+          </div>
+        </div>
+        {/* Shoe Sub-filters */}
         <AnimatePresence>
-          {catTab === 'shoes' && (
-            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
-              className="overflow-hidden mb-3">
-              <div className="flex gap-2">
-                {SHOE_SUBFILTERS.map(sf => (
-                  <button key={sf.key} onClick={() => setShoeSubFilter(sf.key)}
-                    className={`tap h-8 px-3 rounded-full text-xs font-medium border transition-all ${shoeSubFilter === sf.key
-                      ? 'border-rose bg-rose/10 text-rose'
-                      : 'border-bordergray bg-white text-ink/50'}`}>
-                    {sf.label}
-                  </button>
-                ))}
+          {catFilter === 'shoes' && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="overflow-hidden"
+            >
+              <div className="px-4 pb-2">
+                <div className="flex gap-2">
+                  {shoePills.map(p => (
+                    <button
+                      key={p.key}
+                      onClick={() => setShoeFilter(p.key)}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all border ${
+                        shoeFilter === p.key
+                          ? 'bg-rose-light text-burgundy border-burgundy'
+                          : 'bg-white text-gray-500 border-sandline'
+                      }`}
+                    >
+                      {p.label}
+                    </button>
+                  ))}
+                </div>
               </div>
             </motion.div>
           )}
         </AnimatePresence>
-
-        {/* Dynamic size filter pills */}
+        {/* Size Pills */}
         {availableSizes.length > 0 && (
-          <div className="flex items-center gap-2 mb-4">
-            <div className="flex items-center gap-1 shrink-0 text-ink/40">
-              <SlidersHorizontal size={13} />
-              <span className="text-[11px] font-medium">Tailles</span>
-            </div>
-            <div className="flex gap-1.5 overflow-x-auto no-scrollbar flex-1">
+          <div className="px-4 pb-3">
+            <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
+              <span className="text-[10px] text-gray-400 font-medium uppercase tracking-wide whitespace-nowrap">Taille</span>
               {availableSizes.map(size => (
-                <button key={size} onClick={() => setSelSize(selSize === size ? null : size)}
-                  className={`tap shrink-0 min-w-[36px] h-9 px-2.5 rounded-lg text-xs font-medium border transition-all ${selSize === size
-                    ? 'border-burgundy bg-burgundy text-white'
-                    : 'border-bordergray bg-white text-ink/70 hover:border-burgundy/40'}`}>
+                <button
+                  key={size}
+                  onClick={() => setSelectedSize(selectedSize === size ? null : size)}
+                  className={`min-w-[36px] h-9 px-2 rounded-lg text-xs font-semibold transition-all ${
+                    selectedSize === size
+                      ? 'bg-burgundy text-white shadow-md'
+                      : 'bg-sand text-ink/60 hover:bg-sandline'
+                  }`}
+                >
                   {size}
                 </button>
               ))}
-              {selSize && (
-                <button onClick={() => setSelSize(null)} className="tap shrink-0 h-9 px-2 rounded-lg text-ink/40 flex items-center gap-0.5">
-                  <X size={13} />
+              {selectedSize && (
+                <button
+                  onClick={() => setSelectedSize(null)}
+                  className="flex items-center gap-1 text-xs text-red-500 font-medium ml-1"
+                >
+                  <X size={12} /> Effacer
                 </button>
               )}
             </div>
           </div>
         )}
+      </div>
 
-        {/* Results count */}
-        {!loading && (
-          <p className="text-xs text-ink/40 mb-3">{filtered.length} produit{filtered.length > 1 ? 's' : ''}{selSize && ` · Taille ${selSize}`}</p>
-        )}
-
-        {/* Products grid */}
-        {loading ? <Spinner className="py-16" /> : err ? (
-          <p className="text-sm text-rose text-center py-12">{err}</p>
-        ) : filtered.length === 0 ? (
-          <div className="text-center py-20">
-            <p className="text-sm text-ink/40">Aucun produit ne correspond à ce filtre</p>
-            {selSize && <button onClick={() => setSelSize(null)} className="tap text-xs text-burgundy mt-3">Réinitialiser le filtre</button>}
+      {/* Product Grid */}
+      <div className="max-w-md mx-auto px-4 pt-4">
+        {loading ? (
+          <div className="grid grid-cols-2 gap-3">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="aspect-[3/4] rounded-2xl bg-gray-200 animate-pulse" />
+            ))}
+          </div>
+        ) : finalProducts.length === 0 ? (
+          <div className="text-center py-20 text-gray-400">
+            <p className="font-serif text-lg">Aucun produit trouvé</p>
+            <p className="text-sm mt-1">Essayez d'autres filtres</p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-x-3 gap-y-6">
-            {filtered.map((p, i) => <ProductCard key={p.id} product={p} index={i} />)}
-          </div>
+          <>
+            <p className="text-xs text-gray-400 mb-3">{finalProducts.length} produit{finalProducts.length > 1 ? 's' : ''}</p>
+            <div className="grid grid-cols-2 gap-3">
+              {finalProducts.map((p, i) => <ProductCard key={p.id} product={p} index={i} />)}
+            </div>
+          </>
         )}
-      </main>
-      <BottomNav />
+      </div>
     </div>
   );
 }

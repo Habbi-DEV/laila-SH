@@ -1,103 +1,131 @@
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowRight } from 'lucide-react';
-import TopBar from '../../components/customer/TopBar';
-import BottomNav from '../../components/customer/BottomNav';
-import ProductCard from '../../components/customer/ProductCard';
-import Spinner from '../../components/customer/Spinner';
-import { ProductsAPI } from '../../lib/api';
-import type { Product, Category } from '../../lib/types';
+import { ChevronRight, Heart, Sparkles } from 'lucide-react';
+import { api } from '../lib/api';
+import type { Product, Category } from '../lib/types';
+import ProductCard from '../components/ProductCard';
 
 export default function Home() {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
-  const [err, setErr] = useState('');
 
   useEffect(() => {
     Promise.all([
-      ProductsAPI.getProducts().then(setProducts),
-      ProductsAPI.getCategories().then(setCategories),
-    ]).catch(e => setErr(e.message)).finally(() => setLoading(false));
+      api.getProducts({ status: 'active' }),
+      api.getCategories(),
+    ]).then(([p, c]) => {
+      setProducts(p);
+      setCategories(c);
+    }).catch(console.error).finally(() => setLoading(false));
   }, []);
 
-  const active = products.filter(p => p.status === 'active');
-  const featured = active.filter(p => p.featured).slice(0, 4);
-  const newest = active.slice(0, 8);
-  const list = featured.length ? featured : active.slice(0, 4);
+  const featured = products.filter(p => p.is_featured).slice(0, 4);
+  const coupsDeCoeur = products.slice(0, 6);
+
+  const categoryImage = (slug: string) => {
+    if (slug === 'shoes') return '/images/heels-red.jpg';
+    if (slug === 'bags') return '/images/bag-tote.jpg';
+    return '/images/hero-banner.jpg';
+  };
 
   return (
-    <div className="min-h-screen bg-softgray">
-      <TopBar />
-      <main className="max-w-md mx-auto px-5 pb-28 pt-4">
-        <motion.section
-          initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}
-          className="relative rounded-2xl overflow-hidden shadow-[0_16px_50px_-16px_rgba(139,30,63,0.25)]"
-        >
-          <img src="/images/hero-campaign.jpg" alt="Laila campaign" className="w-full h-[460px] object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-transparent" />
-          <div className="absolute bottom-0 left-0 p-6 text-white">
-            <p className="serif-italic text-gold text-sm mb-1">Nouvelle Collection</p>
-            <h1 className="font-serif text-3xl leading-tight">L'art de la<br/>distinction</h1>
-            <Link to="/shop" className="tap inline-flex items-center gap-2 mt-4 bg-white text-ink text-sm font-medium px-4 py-2.5 rounded-full">
-              Découvrir <ArrowRight size={15} />
+    <div className="min-h-screen bg-cream pb-20">
+      {/* Hero Banner */}
+      <section className="relative h-[420px] overflow-hidden">
+        <img src="/images/hero-banner.jpg" alt="Laila Shoes" className="absolute inset-0 w-full h-full object-cover" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
+        <div className="relative h-full flex flex-col justify-end items-center text-center px-6 pb-12">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+          >
+            <p className="font-serif italic text-gold text-xs tracking-wide mb-2">Pièces sélectionnées</p>
+            <h1 className="font-serif text-4xl text-white mb-4 leading-tight">Laila Shoes</h1>
+            <p className="text-white/80 text-sm max-w-xs mx-auto mb-6">L'élégance à chaque pas. Découvrez notre collection exclusive.</p>
+            <Link to="/shop">
+              <motion.button
+                whileTap={{ scale: 0.95 }}
+                className="bg-ink text-gold-light px-8 py-3 rounded-full text-sm font-semibold tracking-wide shadow-lg transition-colors"
+              >
+                Découvrir
+              </motion.button>
+            </Link>
+          </motion.div>
+        </div>
+      </section>
+
+      <div className="gold-line mx-16 mt-3" />
+
+      {/* Category Cards */}
+      <section className="px-4 mt-6 relative z-10">
+        <div className="grid grid-cols-2 gap-3">
+          {categories.map((cat, i) => (
+            <motion.div
+              key={cat.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.1 }}
+            >
+              <Link to={`/shop?category=${cat.slug}`}>
+                <div className="relative aspect-[4/5] rounded-2xl overflow-hidden shadow-md group">
+                  <img src={categoryImage(cat.slug)} alt={cat.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                  <div className="absolute bottom-0 left-0 right-0 p-4">
+                    <h3 className="font-serif text-white text-lg">{cat.name}</h3>
+                    <span className="text-gold text-xs flex items-center gap-1 mt-1">Tout voir <ChevronRight size={12} /></span>
+                  </div>
+                </div>
+              </Link>
+            </motion.div>
+          ))}
+        </div>
+      </section>
+
+      {/* Featured Products */}
+      {featured.length > 0 && (
+        <section className="px-4 mt-10">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-serif text-xl text-ink">Sélection</h2>
+            <Link to="/shop" className="text-burgundy text-xs font-medium flex items-center gap-1">
+              Tout voir <ChevronRight size={14} />
             </Link>
           </div>
-        </motion.section>
-
-        <section className="mt-8">
-          <h2 className="font-serif text-xl mb-3">Catégories</h2>
           <div className="grid grid-cols-2 gap-3">
-            {categories.map((c, i) => (
-              <Link key={c.id} to={`/shop/${c.slug}`} className="block">
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.97 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }}
-                  transition={{ duration: 0.4, delay: i * 0.08 }}
-                  className="relative aspect-square rounded-2xl overflow-hidden bg-softgray"
-                >
-                  <img src={c.image} alt={c.name} className="w-full h-full object-cover" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/45 to-transparent" />
-                  <span className="absolute bottom-3 left-3 text-white font-serif text-lg">{c.name}</span>
-                </motion.div>
-              </Link>
+            {featured.map((p, i) => <ProductCard key={p.id} product={p} index={i} />)}
+          </div>
+        </section>
+      )}
+
+      {/* Coups de cœur */}
+      <section className="px-4 mt-10">
+        <div className="flex items-center gap-2 mb-4">
+          <Heart className="text-burgundy" size={18} fill="currentColor" />
+          <h2 className="font-serif text-xl text-ink">Coups de cœur</h2>
+        </div>
+        {loading ? (
+          <div className="grid grid-cols-2 gap-3">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="aspect-[3/4] rounded-2xl bg-sand animate-pulse" />
             ))}
           </div>
-        </section>
-
-        <section className="mt-9">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="font-serif text-xl">Coups de cœur</h2>
-            <Link to="/shop" className="text-xs text-burgundy tracking-wide">Tout voir</Link>
+        ) : (
+          <div className="grid grid-cols-2 gap-3">
+            {coupsDeCoeur.map((p, i) => <ProductCard key={p.id} product={p} index={i} />)}
           </div>
-          {loading ? <Spinner className="py-16" /> : err ? (
-            <p className="text-sm text-rose text-center py-12">{err}</p>
-          ) : list.length === 0 ? (
-            <p className="text-sm text-ink/40 text-center py-12">Aucun produit pour le moment</p>
-          ) : (
-            <div className="grid grid-cols-2 gap-x-3 gap-y-6">
-              {list.map((p, i) => <ProductCard key={p.id} product={p} index={i} />)}
-            </div>
-          )}
-        </section>
-
-        {!loading && newest.length > 0 && (
-          <section className="mt-9">
-            <h2 className="font-serif text-xl mb-3">New Collection</h2>
-            <div className="flex gap-3 overflow-x-auto no-scrollbar -mx-5 px-5 pb-2">
-              {newest.map((p, i) => (
-                <div key={p.id} className="w-[150px] shrink-0">
-                  <ProductCard product={p} index={i} />
-                </div>
-              ))}
-            </div>
-          </section>
         )}
+      </section>
 
-        <div className="gold-line mt-10 mb-4" />
-        <p className="text-center serif-italic text-ink/40 text-sm">Laila Shoes — Crafted with passion</p>
-      </main>
-      <BottomNav />
+      {/* Brand strip */}
+      <section className="mt-12 mx-4">
+        <div className="bg-ink rounded-2xl p-6 text-center">
+          <Sparkles className="text-gold mx-auto mb-2" size={24} />
+          <p className="font-serif text-white text-lg">Livraison dans toute l'Algérie</p>
+          <p className="text-white/70 text-xs mt-1">Paiement à la livraison · 58 wilayas</p>
+        </div>
+      </section>
     </div>
   );
 }
