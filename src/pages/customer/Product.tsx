@@ -20,6 +20,7 @@ export default function ProductPage() {
   const [imgIdx, setImgIdx] = useState(0);
   const [added, setAdded] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const sizeRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!id) return;
@@ -45,7 +46,11 @@ export default function ProductPage() {
 
   const handleAdd = () => {
     if (!product || !variant) return;
-    if (!selSize) { setErr('Veuillez choisir une taille'); return; }
+    if (!selSize) {
+      setErr('Veuillez choisir une taille');
+      sizeRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
     addToCart({
       key: `${product.id}-${variant.id}-${selSize}`,
       productId: product.id, variantId: variant.id,
@@ -117,7 +122,7 @@ export default function ProductPage() {
           )}
 
           {variant && variant.sizes?.length > 0 && (
-            <div className="mt-6">
+            <div className="mt-6" ref={sizeRef}>
               <div className="flex items-center justify-between mb-2.5">
                 <span className="text-sm font-medium">Taille</span>
                 <span className="text-xs text-ink/50">Stock total: {totalStock}</span>
@@ -127,7 +132,7 @@ export default function ProductPage() {
                   const out = Number(s.stock) <= 0;
                   const sel = selSize === s.size;
                   return (
-                    <button key={s.size} disabled={out} onClick={() => setSelSize(s.size)}
+                    <button key={s.size} disabled={out} onClick={() => { setSelSize(s.size); setErr(''); }}
                       className={`tap h-11 rounded-xl text-sm font-medium border transition-all ${sel ? 'border-burgundy bg-burgundy text-white' : out ? 'border-bordergray bg-softgray text-ink/25 line-through' : 'border-bordergray bg-white text-ink hover:border-burgundy/40'}`}>
                       {s.size}
                     </button>
@@ -144,11 +149,14 @@ export default function ProductPage() {
             </div>
           )}
 
-          {err && <p className="text-sm text-rose mt-4 text-center">{err}</p>}
+          {err && !added && <p className="text-sm text-rose mt-4 text-center">{err}</p>}
         </div>
       </main>
 
       <div className="fixed bottom-0 inset-x-0 z-40 bg-white/90 backdrop-blur-xl border-t border-bordergray/70 pb-[env(safe-area-inset-bottom)]">
+        {err && (
+          <p className="text-xs text-rose text-center pt-2 px-5">{err}</p>
+        )}
         <div className="max-w-md mx-auto px-5 py-3 flex items-center gap-3">
           <div className="flex-1">
             <p className="text-[10px] text-ink/50 tracking-wide">Prix</p>
