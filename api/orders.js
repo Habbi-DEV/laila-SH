@@ -173,6 +173,15 @@ export default async function handler(req, res) {
         return res.status(200).json(data);
       }
 
+      // جلب بلديات ولاية معينة (متاح للجميع، تُستخدم في صفحة الدفع)
+      if (type === 'communes') {
+        const wilayaId = req.query.wilaya_id;
+        if (!wilayaId) return res.status(400).json({ error: 'wilaya_id مطلوب' });
+        const { data, error } = await supabase.from('communes').select('*').eq('wilaya_id', Number(wilayaId)).order('name', { ascending: true });
+        if (error) throw error;
+        return res.status(200).json(data);
+      }
+
       // جلب الطلبات (يتطلب صلاحية مدير النظام)
       if (type === 'order') {
         const admin = await verifyAdmin(req);
@@ -204,17 +213,32 @@ export default async function handler(req, res) {
 
       // إنشاء طلب جديد للعملاء من المتجر (متاح للجميع دون تسجيل دخول)
       if (type === 'order') {
-        const { customer_name, phone, address, city, items, wilaya_id, wilaya_name, delivery_type, payment_method } = req.body;
+        const { customer_name, phone, address, city, commune_id, items, wilaya_id, wilaya_name, delivery_type, payment_method } = req.body;
         if (!customer_name || !phone || !items || !items.length || !wilaya_id) {
           return res.status(400).json({ error: 'يرجى إدخال جميع البيانات المطلوبة لإنشاء الطلب' });
         }
+
+        // إذا تم اختيار بلدية من القائمة، تحقق أنها فعلاً تابعة للولاية المختارة
+        // واستخدم اسمها الرسمي كقيمة city (يبقى النص القديم كخيار احتياطي)
+        let resolvedCity = city;
+        if (commune_id) {
+          const { data: commune, error: cerr } = await supabase
+            .from('communes').select('id,name,wilaya_id').eq('id', Number(commune_id)).single();
+          if (cerr || !commune) return res.status(400).json({ error: 'البلدية المختارة غير صالحة' });
+          if (commune.wilaya_id !== Number(wilaya_id)) {
+            return res.status(400).json({ error: 'البلدية المختارة لا تنتمي إلى الولاية المختارة' });
+          }
+          resolvedCity = commune.name;
+        }
+        if (!resolvedCity) return res.status(400).json({ error: 'يرجى تحديد البلدية' });
 
         const { price: shipping_price } = await shippingFor(wilaya_id, delivery_type);
         const pTotal = productsTotal(items);
         const grandTotal = pTotal + shipping_price;
 
         const { data: order, error } = await supabase.from('orders').insert({
-          customer_name, phone, address, city, total: grandTotal, payment_method: payment_method || 'cod', status: 'pending', items,
+          customer_name, phone, address, city: resolvedCity, commune_id: commune_id || null,
+          total: grandTotal, payment_method: payment_method || 'cod', status: 'pending', items,
         }).select().single();
         if (error) throw error;
 
