@@ -7,6 +7,7 @@ import type {
   Customer, 
   Order, 
   Wilaya,
+  Commune,
   CartItem 
 } from './types'; 
 
@@ -116,6 +117,10 @@ export const OrdersAPI = {
   // الولايات (Wilayas)[cite: 7]
   getWilayas: () => api<Wilaya[]>('/api/orders?type=wilayas'),
 
+  // البلديات (Communes) — مرتبطة بالولاية المختارة
+  getCommunes: (wilayaId: string | number) =>
+    api<Commune[]>(`/api/orders?type=communes&wilaya_id=${wilayaId}`),
+
   // الطلبات (Orders)[cite: 7]
   getOrders: () => api<Order[]>('/api/orders?type=order'),
   getOrderById: (id: string | number) => api<Order>(`/api/orders?type=order&id=${id}`),
@@ -125,6 +130,7 @@ export const OrdersAPI = {
     phone: string;
     address: string;
     city: string;
+    commune_id?: number | null;
     items: CartItem[];
     wilaya_id: number;
     wilaya_name: string;
