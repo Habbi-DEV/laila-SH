@@ -1,102 +1,87 @@
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Minus, Plus, Trash2, ShoppingBag, ChevronLeft } from 'lucide-react';
-import { useCart } from '../contexts/CartContext';
+import { Plus, Minus, Trash2, ShoppingBag } from 'lucide-react';
+import TopBar from '../../components/customer/TopBar';
+import BottomNav from '../../components/customer/BottomNav';
+import { getCart, updateQty, removeItem } from '../../lib/cart';
+import type { CartItem } from '../../lib/types';
 
 export default function Cart() {
-  const { items, removeItem, updateQty, total, count } = useCart();
+  const [items, setItems] = useState<CartItem[]>([]);
   const navigate = useNavigate();
+  
+  const refresh = () => setItems(getCart());
+  
+  useEffect(() => {
+    refresh();
+    const h = () => refresh();
+    window.addEventListener('cart-changed', h);
+    return () => window.removeEventListener('cart-changed', h);
+  }, []);
+  
+  const total = items.reduce((s, i) => s + i.qty * i.price, 0);
 
   return (
-    <div className="min-h-screen bg-cream pb-20">
-      <div className="bg-white border-b border-sandline">
-        <div className="max-w-md mx-auto px-4 py-4">
-          <h1 className="font-serif text-xl text-ink">Panier</h1>
-          {count > 0 && <p className="text-xs text-gray-400 mt-0.5">{count} article{count > 1 ? 's' : ''}</p>}
-        </div>
-      </div>
-
-      <div className="max-w-md mx-auto px-4 pt-4">
+    <div className="min-h-screen bg-softgray">
+      <TopBar title="Panier" />
+      <main className="max-w-md mx-auto px-5 pb-32 pt-4">
+        <h1 className="font-serif text-2xl mb-5">Mon Panier</h1>
         {items.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-24 text-center">
-            <ShoppingBag size={48} className="text-gray-300 mb-4" />
-            <p className="font-serif text-lg text-gray-500">Votre panier est vide</p>
-            <p className="text-sm text-gray-400 mt-1">Découvrez nos collections</p>
-            <Link to="/shop" className="mt-6 bg-burgundy text-white px-6 py-2.5 rounded-full text-sm font-medium">
-              Découvrir
-            </Link>
+          <div className="text-center py-24">
+            <ShoppingBag size={40} className="mx-auto text-ink/20" />
+            <p className="mt-4 text-ink/50 text-sm">Votre panier est vide</p>
+            <Link to="/" className="tap inline-block mt-5 bg-burgundy text-white text-sm px-6 py-3 rounded-xl">Découvrir la collection</Link>
           </div>
         ) : (
           <>
             <div className="space-y-3">
               <AnimatePresence>
-                {items.map((item, i) => (
-                  <motion.div
-                    key={`${item.variant_id}-${item.size}`}
-                    layout
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, x: -50 }}
-                    transition={{ delay: i * 0.05 }}
-                    className="bg-white rounded-2xl p-3 flex gap-3 shadow-sm"
-                  >
-                    <Link to={`/product/${item.product_id}`}>
-                      <img src={item.image} alt={item.title} className="w-20 h-24 rounded-xl object-cover" />
-                    </Link>
+                {items.map(item => (
+                  <motion.div key={item.key} layout initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, x: -40 }}
+                    className="bg-white rounded-2xl p-3 flex gap-3 shadow-soft">
+                    <div className="w-20 h-24 rounded-xl overflow-hidden bg-softgray shrink-0">
+                      {item.image && <img src={item.image} alt={item.name} className="w-full h-full object-cover" />}
+                    </div>
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-serif text-sm text-ink line-clamp-1">{item.title}</h3>
-                      <div className="flex items-center gap-2 mt-1">
-                        <span className="w-3 h-3 rounded-full border border-sandline" style={{ backgroundColor: item.color_hex }} />
-                        <span className="text-xs text-gray-500">{item.color_name} · Taille {item.size}</span>
+                      <h3 className="font-serif text-sm truncate">{item.name}</h3>
+                      <div className="flex items-center gap-2 mt-1 text-xs text-ink/60">
+                        <span className="w-3 h-3 rounded-full ring-1 ring-bordergray" style={{ background: item.colorHex }} />
+                        <span>{item.colorName}</span>
+                        <span>·</span>
+                        <span>T. {item.size}</span>
                       </div>
                       <div className="flex items-center justify-between mt-2">
-                        <span className="text-burgundy font-semibold text-sm">
-                          {(item.discount_price ?? item.price).toLocaleString('fr-FR')} DA
-                        </span>
-                        <div className="flex items-center gap-2">
-                          <button onClick={() => updateQty(item.variant_id, item.size, item.qty - 1)} className="w-7 h-7 rounded-lg bg-sand flex items-center justify-center hover:bg-sandline">
-                            <Minus size={14} />
-                          </button>
-                          <span className="text-sm font-medium w-5 text-center">{item.qty}</span>
-                          <button onClick={() => updateQty(item.variant_id, item.size, item.qty + 1)} className="w-7 h-7 rounded-lg bg-sand flex items-center justify-center hover:bg-sandline">
-                            <Plus size={14} />
-                          </button>
-                          <button onClick={() => removeItem(item.variant_id, item.size)} className="ml-1 text-red-400 hover:text-red-600">
-                            <Trash2 size={16} />
-                          </button>
+                        <div className="flex items-center border border-bordergray rounded-lg">
+                          <button onClick={() => updateQty(item.key, item.qty - 1)} className="tap w-7 h-7 flex items-center justify-center text-ink/70"><Minus size={13} /></button>
+                          <span className="w-7 text-center text-sm">{item.qty}</span>
+                          <button onClick={() => updateQty(item.key, item.qty + 1)} className="tap w-7 h-7 flex items-center justify-center text-ink/70"><Plus size={13} /></button>
                         </div>
+                        <span className="font-semibold text-burgundy text-sm">{(item.qty * item.price).toFixed(0)} DA</span>
                       </div>
                     </div>
+                    <button onClick={() => removeItem(item.key)} className="tap text-ink/30 hover:text-rose self-start"><Trash2 size={16} /></button>
                   </motion.div>
                 ))}
               </AnimatePresence>
             </div>
-
-            {/* Total */}
-            <div className="mt-6 bg-white rounded-2xl p-4 shadow-sm">
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-sm text-gray-500">Sous-total</span>
-                <span className="text-sm font-medium">{total.toLocaleString('fr-FR')} DA</span>
-              </div>
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-sm text-gray-500">Livraison</span>
-                <span className="text-sm text-gray-400">Calculée à l'étape suivante</span>
-              </div>
-              <div className="border-t border-sandline pt-3 flex items-center justify-between">
-                <span className="font-serif text-base text-ink">Total</span>
-                <span className="text-burgundy font-bold text-lg">{total.toLocaleString('fr-FR')} DA</span>
-              </div>
+            <div className="mt-5 bg-white rounded-2xl p-4 shadow-soft space-y-2">
+              <div className="flex justify-between text-sm text-ink/70"><span>Sous-total</span><span>{total.toFixed(0)} DA</span></div>
+              <div className="flex justify-between text-sm text-ink/70"><span>Livraison</span><span className="text-gold text-xs">Calculée à l'étape suivante</span></div>
+              <div className="gold-line my-1" />
+              <div className="flex justify-between font-semibold"><span>Total</span><span className="text-burgundy">{total.toFixed(0)} DA</span></div>
             </div>
-
-            <button
-              onClick={() => navigate('/checkout')}
-              className="w-full mt-4 bg-burgundy text-white py-3.5 rounded-full font-semibold text-sm hover:bg-burgundy-dark active:scale-[0.98] transition-all"
-            >
-              Commander
-            </button>
           </>
         )}
-      </div>
+      </main>
+      {items.length > 0 && (
+        <div className="fixed bottom-16 inset-x-0 z-30 px-5 pb-2">
+          <div className="max-w-md mx-auto">
+            <button onClick={() => navigate('/checkout')} className="tap w-full h-12 rounded-xl bg-burgundy text-white font-medium">Passer la commande</button>
+          </div>
+        </div>
+      )}
+      <BottomNav />
     </div>
   );
 }

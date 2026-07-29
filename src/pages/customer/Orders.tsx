@@ -1,110 +1,83 @@
-import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Package } from 'lucide-react';
-import { api } from '../lib/api';
-import type { Order } from '../lib/types';
-import { ORDER_STATUS_LABELS, ORDER_STATUS_COLORS } from '../lib/types';
+import { useEffect, useState } from 'react';
+import TopBar from '../../components/customer/TopBar';
+import BottomNav from '../../components/customer/BottomNav';
+import Spinner from '../../components/customer/Spinner';
+import { OrdersAPI } from '../../lib/api';
+import type { Order } from '../../lib/types';
+
+const statusColor: Record<string, string> = { 
+  pending: 'bg-gold/20 text-gold', 
+  confirmed: 'bg-burgundy/10 text-burgundy', 
+  shipped: 'bg-rose/15 text-rose', 
+  delivered: 'bg-green-100 text-green-700', 
+  cancelled: 'bg-ink/10 text-ink/50' 
+};
+
+const statusLabel: Record<string, string> = { 
+  pending: 'En attente', 
+  confirmed: 'Confirmée', 
+  shipped: 'Expédiée', 
+  delivered: 'Livrée', 
+  cancelled: 'Annulée' 
+};
 
 export default function Orders() {
-  const [phone, setPhone] = useState('');
   const [orders, setOrders] = useState<Order[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [searched, setSearched] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  const handleSearch = async () => {
-    if (!phone.trim()) return;
-    setLoading(true);
-    setSearched(true);
-    try {
-      const data = await api.getOrders(phone.replace(/\s/g, ''));
-      setOrders(data);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  useEffect(() => { 
+    OrdersAPI.getOrders()
+      .then(setOrders)
+      .catch(() => {}) // تجاهل الخطأ بصمت أو يمكنك إضافة state مخصص للأخطاء
+      .finally(() => setLoading(false)); 
+  }, []);
 
   return (
-    <div className="min-h-screen bg-cream pb-20">
-      <div className="bg-white border-b border-sandline">
-        <div className="max-w-md mx-auto px-4 py-4">
-          <h1 className="font-serif text-xl text-ink">Mes Commandes</h1>
-          <p className="text-xs text-gray-400 mt-0.5">Suivez vos commandes par téléphone</p>
-        </div>
-      </div>
-
-      <div className="max-w-md mx-auto px-4 pt-4">
-        <div className="flex gap-2">
-          <div className="flex-1 relative">
-            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-            <input
-              type="tel"
-              value={phone}
-              onChange={e => setPhone(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && handleSearch()}
-              placeholder="Votre numéro de téléphone"
-              className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-sandline text-sm focus:border-burgundy focus:outline-none"
-            />
-          </div>
-          <button
-            onClick={handleSearch}
-            disabled={loading}
-            className="bg-burgundy text-white px-5 rounded-xl text-sm font-medium hover:bg-burgundy-dark"
-          >
-            {loading ? '...' : 'Chercher'}
-          </button>
-        </div>
-
-        <div className="mt-4 space-y-3">
-          <AnimatePresence>
-            {orders.map((order, i) => (
-              <motion.div
-                key={order.id}
-                layout
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, x: -50 }}
-                transition={{ delay: i * 0.05 }}
-                className="bg-white rounded-2xl p-4 shadow-sm"
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <span className="font-mono text-xs text-gray-500">{order.order_number}</span>
-                  <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${ORDER_STATUS_COLORS[order.status] || 'bg-gray-100 text-gray-600 border-sandline'}`}>
-                    {ORDER_STATUS_LABELS[order.status] || order.status}
+    <div className="min-h-screen bg-softgray">
+      <TopBar title="Commandes" />
+      <main className="max-w-md mx-auto px-5 pb-28 pt-4">
+        <h1 className="font-serif text-2xl mb-5">Mes commandes</h1>
+        
+        {loading ? <Spinner className="py-32" /> : orders.length === 0 ? (
+          <p className="text-center text-ink/50 py-32">Aucune commande pour le moment</p>
+        ) : (
+          <div className="space-y-3">
+            {orders.map(o => (
+              <div key={o.id} className="bg-white rounded-2xl p-4 shadow-soft">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <p className="font-medium text-sm">Commande #{o.id}</p>
+                    <p className="text-xs text-ink/50 mt-0.5">
+                      {new Date(o.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
+                    </p>
+                  </div>
+                  <span className={`text-[10px] px-2.5 py-1 rounded-full font-medium ${statusColor[o.status] || statusColor.pending}`}>
+                    {statusLabel[o.status] || o.status}
                   </span>
                 </div>
-                <div className="space-y-1">
-                  {(order.items || []).map((item, idx) => (
-                    <div key={idx} className="flex justify-between text-sm">
-                      <span className="text-gray-600 line-clamp-1">{item.title} · {item.size} ×{item.qty}</span>
-                      <span className="text-gray-700">{(item.price * item.qty).toLocaleString('fr-FR')} DA</span>
+                
+                <div className="mt-3 space-y-1">
+                  {(o.items || []).slice(0, 2).map((i: any, idx: number) => (
+                    <div key={idx} className="flex justify-between text-xs text-ink/70">
+                      <span className="truncate flex-1 pr-2">{i.name} · T.{i.size} ×{i.qty}</span>
+                      <span>{(i.qty * i.price).toFixed(0)} DA</span>
                     </div>
                   ))}
+                  {(o.items || []).length > 2 && <p className="text-xs text-ink/40">+{o.items.length - 2} article(s)</p>}
                 </div>
-                <div className="border-t border-sandline mt-2 pt-2 flex justify-between">
-                  <span className="text-xs text-gray-500">{new Date(order.created_at).toLocaleDateString('fr-FR')}</span>
-                  <span className="text-burgundy font-bold">{order.total.toLocaleString('fr-FR')} DA</span>
+                
+                <div className="gold-line my-2" />
+                
+                <div className="flex justify-between font-semibold text-sm">
+                  <span>Total</span>
+                  <span className="text-burgundy">{Number(o.total).toFixed(0)} DA</span>
                 </div>
-                {order.tracking && (
-                  <div className="mt-3 bg-burgundy/5 rounded-xl p-2.5 border border-burgundy/20">
-                    <p className="text-[10px] text-burgundy font-medium uppercase tracking-wide">Suivi</p>
-                    <p className="font-mono text-sm text-gray-700 mt-0.5">{order.tracking.tracking_number}</p>
-                  </div>
-                )}
-              </motion.div>
+              </div>
             ))}
-          </AnimatePresence>
-
-          {searched && !loading && orders.length === 0 && (
-            <div className="flex flex-col items-center justify-center py-16 text-center">
-              <Package size={40} className="text-gray-300 mb-3" />
-              <p className="text-gray-500 text-sm">Aucune commande trouvée</p>
-              <p className="text-gray-400 text-xs mt-1">Vérifiez votre numéro de téléphone</p>
-            </div>
-          )}
-        </div>
-      </div>
+          </div>
+        )}
+      </main>
+      <BottomNav />
     </div>
   );
 }
