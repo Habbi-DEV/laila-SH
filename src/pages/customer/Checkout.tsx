@@ -5,27 +5,29 @@ import { Truck, Banknote, Check, Home, Store, MapPin } from 'lucide-react';
 import TopBar from '../../components/customer/TopBar';
 import { getCart, cartTotal, clearCart } from '../../lib/cart';
 import { OrdersAPI } from '../../lib/api'; // استيراد الأداة الموحدة الجديدة
-import type { Wilaya } from '../../lib/types';
+import type { Wilaya, Commune } from '../../lib/types';
 
 export default function Checkout() {
   const navigate = useNavigate();
   const items = getCart();
   const productsTotal = cartTotal();
   const [wilayas, setWilayas] = useState<Wilaya[]>([]);
+  const [communes, setCommunes] = useState<Commune[]>([]);
+  const [communesLoading, setCommunesLoading] = useState(false);
   
   // تحديد أنواع البيانات لحقول الفورم لتكون مطابقة لـ TypeScript
   const [form, setForm] = useState<{
     name: string;
     phone: string;
     address: string;
-    city: string;
+    commune_id: string;
     wilaya_id: string;
     delivery_type: 'home' | 'desk';
   }>({ 
     name: '', 
     phone: '', 
     address: '', 
-    city: '', 
+    commune_id: '', 
     wilaya_id: '', 
     delivery_type: 'home' 
   });
@@ -39,6 +41,18 @@ export default function Checkout() {
       .then(setWilayas)
       .catch(() => {}); 
   }, []);
+
+  // عند تغيير الولاية: جلب بلدياتها وإفراغ اختيار البلدية القديم
+  useEffect(() => {
+    setForm(f => ({ ...f, commune_id: '' }));
+    setCommunes([]);
+    if (!form.wilaya_id) return;
+    setCommunesLoading(true);
+    OrdersAPI.getCommunes(form.wilaya_id)
+      .then(setCommunes)
+      .catch(() => setCommunes([]))
+      .finally(() => setCommunesLoading(false));
+  }, [form.wilaya_id]);
 
   const selectedWilaya = wilayas.find(w => w.id === Number(form.wilaya_id));
   const shippingPrice = selectedWilaya
@@ -61,12 +75,16 @@ export default function Checkout() {
 
   const submit = async () => {
     setErr('');
-    if (!form.name || !form.phone || !form.address || !form.city) { 
+    if (!form.name || !form.phone || !form.address) { 
       setErr('Veuillez remplir tous les champs'); 
       return; 
     }
     if (!form.wilaya_id) { 
       setErr('Veuillez sélectionner votre wilaya'); 
+      return; 
+    }
+    if (!form.commune_id) { 
+      setErr('Veuillez sélectionner votre commune'); 
       return; 
     }
     if (!/^\d{8,}$/.test(form.phone.replace(/\s/g, ''))) { 
@@ -77,11 +95,13 @@ export default function Checkout() {
     
     try {
       // إرسال الطلب عبر OrdersAPI المعرّف في الـ api.ts
+      const selectedCommune = communes.find(c => c.id === Number(form.commune_id));
       const order = await OrdersAPI.createOrder({
         customer_name: form.name,
         phone: form.phone,
         address: form.address,
-        city: form.city,
+        city: selectedCommune?.name || '',
+        commune_id: Number(form.commune_id),
         items,
         wilaya_id: Number(form.wilaya_id),
         wilaya_name: selectedWilaya?.name || '',
@@ -116,7 +136,6 @@ export default function Checkout() {
           {field('name', 'Nom complet')}
           {field('phone', 'Téléphone', 'tel')}
           {field('address', 'Adresse')}
-          {field('city', 'Baladia / Commune')}
           <div>
             <label className="text-xs text-ink/60 mb-1.5 block">Wilaya</label>
             <div className="relative">
@@ -125,6 +144,20 @@ export default function Checkout() {
                 className="w-full h-12 pl-10 pr-4 rounded-xl border border-bordergray bg-white text-sm focus:border-burgundy outline-none appearance-none">
                 <option value="" disabled>Choisir votre wilaya (1–58)</option>
                 {wilayas.map(w => <option key={w.id} value={w.id}>{w.id} — {w.name}</option>)}
+              </select>
+            </div>
+          </div>
+          <div>
+            <label className="text-xs text-ink/60 mb-1.5 block">Commune</label>
+            <div className="relative">
+              <MapPin size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-ink/40 pointer-events-none" />
+              <select value={form.commune_id} onChange={e => set('commune_id', e.target.value)}
+                disabled={!form.wilaya_id || communesLoading}
+                className="w-full h-12 pl-10 pr-4 rounded-xl border border-bordergray bg-white text-sm focus:border-burgundy outline-none appearance-none disabled:opacity-50">
+                <option value="" disabled>
+                  {!form.wilaya_id ? 'Choisissez d\'abord la wilaya' : communesLoading ? 'Chargement…' : communes.length === 0 ? 'Aucune commune disponible' : 'Choisir votre commune'}
+                </option>
+                {communes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
             </div>
           </div>
