@@ -33,7 +33,7 @@ export default function Home() {
       <main className="max-w-md mx-auto px-5 pb-28 pt-4">
         <motion.section
           initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}
-          className="relative rounded-2xl overflow-hidden shadow-[0_16px_50px_-16px_rgba(139,30,63,0.25)]"
+          className="relative rounded-2xl overflow-hidden shadow-[0_16px_50px_-16px_rgba(168,103,46,0.25)]"
         >
           <img src="/images/hero-campaign.jpg" alt="Laila campaign" className="w-full h-[460px] object-cover" />
           <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-transparent" />
