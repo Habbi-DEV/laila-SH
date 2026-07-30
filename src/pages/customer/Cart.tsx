@@ -23,7 +23,7 @@ export default function Cart() {
   const total = items.reduce((s, i) => s + i.qty * i.price, 0);
 
   return (
-    <div className="min-h-screen bg-softgray">
+    <div className="min-h-screen bg-white">
       <TopBar title="Panier" />
       <main className="max-w-md mx-auto px-5 pb-32 pt-4">
         <h1 className="font-serif text-2xl mb-5">Mon Panier</h1>

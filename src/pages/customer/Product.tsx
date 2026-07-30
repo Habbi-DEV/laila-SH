@@ -66,12 +66,12 @@ export default function ProductPage() {
     setImgIdx(i => Math.max(0, Math.min(images.length - 1, i + (d > 0 ? 1 : -1))));
   };
 
-  if (loading) return (<div className="min-h-screen bg-softgray"><TopBar showBack /><Spinner className="py-32" /></div>);
-  if (err && !product) return (<div className="min-h-screen bg-softgray"><TopBar showBack /><p className="text-center text-rose py-32">{err}</p></div>);
+  if (loading) return (<div className="min-h-screen bg-white"><TopBar showBack /><Spinner className="py-32" /></div>);
+  if (err && !product) return (<div className="min-h-screen bg-white"><TopBar showBack /><p className="text-center text-rose py-32">{err}</p></div>);
   if (!product) return null;
 
   return (
-    <div className="min-h-screen bg-softgray">
+    <div className="min-h-screen bg-white">
       <TopBar showBack />
       <main className="max-w-md mx-auto pb-32">
         <div className="relative bg-white">
@@ -113,7 +113,7 @@ export default function ProductPage() {
               <div className="flex gap-3 flex-wrap">
                 {variants.map((v, i) => (
                   <button key={v.id || i} onClick={() => setSelVariant(i)} className="tap relative">
-                    <span className={`block w-9 h-9 rounded-full ring-1 transition-all ${selVariant === i ? 'ring-2 ring-burgundy ring-offset-2 ring-offset-white' : 'ring-bordergray'}`} style={{ background: v.color_hex }} />
+                    <span className={`block w-9 h-9 rounded-full border border-black ring-1 transition-all ${selVariant === i ? 'ring-2 ring-burgundy ring-offset-2 ring-offset-white' : 'ring-bordergray'}`} style={{ background: v.color_hex }} />
                     {v.is_default && <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-gold ring-2 ring-white" />}
                   </button>
                 ))}

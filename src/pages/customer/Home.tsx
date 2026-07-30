@@ -36,7 +36,7 @@ export default function Home() {
   const coupsDeCoeur = active.slice(0, 6);
 
   return (
-    <div className="min-h-screen bg-softgray pb-24">
+    <div className="min-h-screen bg-white pb-24">
 
       {/* Hero Banner */}
       <section className="relative h-[420px] overflow-hidden">
@@ -118,7 +118,7 @@ export default function Home() {
                 transition={{ delay: i * 0.1 }}
               >
                 <Link to={`/shop/${c.slug}`}>
-                  <div className="relative aspect-[4/5] rounded-2xl overflow-hidden shadow-md group">
+                  <div className="relative aspect-[4/5] rounded-2xl overflow-hidden border border-black shadow-md group">
                     <img src={c.image} alt={c.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                     <div className="absolute bottom-0 left-0 right-0 p-4">
