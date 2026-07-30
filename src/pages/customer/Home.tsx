@@ -41,9 +41,9 @@ export default function Home() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
           >
-            <p className="text-gold text-xs tracking-[0.3em] uppercase mb-2">Nouvelle collection</p>
-            <h1 className="font-serif text-4xl text-white mb-4 leading-tight">Laila Shoes</h1>
-            <p className="text-white/80 text-sm max-w-xs mx-auto mb-6">L'élégance à chaque pas. Découvrez notre collection exclusive.</p>
+            <p className="text-gold text-xs tracking-[0.3em] uppercase mb-2"></p>
+            <h1 className="font-serif text-4xl text-white mb-4 leading-tight"></h1>
+            <p className="text-white/80 text-sm max-w-xs mx-auto mb-6"></p>
             <Link to="/shop">
               <motion.button
                 whileTap={{ scale: 0.95 }}
