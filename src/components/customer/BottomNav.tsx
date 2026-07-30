@@ -18,7 +18,7 @@ export default function BottomNav() {
     return () => window.removeEventListener('cart-changed', h);
   }, []);
   return (
-    <nav className="fixed bottom-0 inset-x-0 z-40 bg-white/90 backdrop-blur-xl border-t border-bordergray/70 pb-[env(safe-area-inset-bottom)]">
+    <nav className="fixed bottom-0 inset-x-0 z-40 bg-white/90 backdrop-blur-xl border-t border-black pb-[env(safe-area-inset-bottom)]">
       <div className="max-w-md mx-auto h-16 grid grid-cols-3">
         {tabs.map(({ to, label, icon: Icon, badge }) => {
           const active = loc.pathname === to;

@@ -16,7 +16,7 @@ export default function ProductCard({ product, index = 0 }: { product: CardProdu
         transition={{ duration: 0.5, delay: (index % 4) * 0.06 }}
         className="group"
       >
-        <div className="relative aspect-[4/5] rounded-2xl overflow-hidden bg-softgray shadow-[0_8px_30px_-12px_rgba(0,0,0,0.10)]">
+        <div className="relative aspect-[4/5] rounded-2xl overflow-hidden bg-softgray border border-black shadow-md">
           {product.cover_image ? (
             <img src={product.cover_image} alt={product.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
           ) : (
@@ -39,7 +39,7 @@ export default function ProductCard({ product, index = 0 }: { product: CardProdu
             {product.colors && product.colors.length > 0 && (
               <div className="flex -space-x-1">
                 {product.colors.slice(0, 4).map((c, i) => (
-                  <span key={i} className="w-3 h-3 rounded-full ring-1 ring-white" style={{ background: c.hex }} />
+                  <span key={i} className="w-3 h-3 rounded-full border border-black" style={{ background: c.hex }} />
                 ))}
               </div>
             )}
