@@ -85,19 +85,19 @@ export default function Home() {
           )}
         </AnimatePresence>
 
-        <div className="relative h-full flex flex-col justify-end items-center text-center px-6 pb-12">
+        <div className="absolute left-6 top-[42%] z-10 text-left max-w-[190px]">
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
           >
             <p className="text-gold text-xs tracking-[0.3em] uppercase mb-2"></p>
             <h1 className="font-serif text-4xl text-white mb-4 leading-tight"></h1>
-            <p className="text-white/80 text-sm max-w-xs mx-auto mb-6"></p>
+            <p className="text-white/80 text-sm mb-6"></p>
             <Link to="/shop">
               <motion.button
                 whileTap={{ scale: 0.95 }}
-                className="tap bg-gold hover:bg-gold-light text-white px-8 py-3 rounded-full text-sm font-semibold tracking-wide shadow-lg transition-colors"
+                className="tap bg-white/85 backdrop-blur-md text-ink border border-gold/50 px-7 py-3 rounded-full text-sm font-semibold tracking-wide shadow-xl hover:bg-white transition-colors"
               >
                 Découvrir
               </motion.button>
