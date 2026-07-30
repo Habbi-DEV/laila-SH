@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Check, ShoppingBag, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Check, ShoppingBag, Share2 } from 'lucide-react';
 import TopBar from '../../components/customer/TopBar';
 import BottomNav from '../../components/customer/BottomNav';
 import Spinner from '../../components/customer/Spinner';
@@ -19,7 +19,7 @@ export default function ProductPage() {
   const [selSize, setSelSize] = useState<string | null>(null);
   const [imgIdx, setImgIdx] = useState(0);
   const [added, setAdded] = useState(false);
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const [shared, setShared] = useState(false);
   const sizeRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -61,9 +61,19 @@ export default function ProductPage() {
     setTimeout(() => setAdded(false), 1800);
   };
 
-  const scrollBy = (d: number) => {
-    scrollRef.current?.scrollBy({ left: d, behavior: 'smooth' });
-    setImgIdx(i => Math.max(0, Math.min(images.length - 1, i + (d > 0 ? 1 : -1))));
+  const handleShare = async () => {
+    const url = window.location.href;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: product?.name, text: product?.name, url });
+      } else {
+        await navigator.clipboard.writeText(url);
+        setShared(true);
+        setTimeout(() => setShared(false), 1800);
+      }
+    } catch {
+      // partage annulé par l'utilisateur, on ignore
+    }
   };
 
   if (loading) return (<div className="min-h-screen bg-white"><TopBar showBack /><Spinner className="py-32" /></div>);
@@ -74,26 +84,40 @@ export default function ProductPage() {
     <div className="min-h-screen bg-white">
       <TopBar showBack />
       <main className="max-w-md mx-auto pb-32">
-        <div className="relative bg-white">
-          <div ref={scrollRef} className="flex overflow-x-auto no-scrollbar snap-x snap-mandatory">
-            {images.length ? images.map((src, i) => (
-              <div key={i} className="min-w-full snap-center aspect-square bg-softgray">
-                <img src={src} alt={`${product.name} ${i + 1}`} className="w-full h-full object-cover" />
-              </div>
-            )) : (
-              <div className="min-w-full aspect-square bg-softgray shimmer" />
+        <div className="px-4 pt-3 flex gap-3">
+          <div className="flex-1 aspect-[4/5] rounded-2xl overflow-hidden border border-black shadow-lg bg-softgray">
+            {images.length ? (
+              <img src={images[imgIdx]} alt={`${product.name} ${imgIdx + 1}`} className="w-full h-full object-cover" />
+            ) : (
+              <div className="w-full h-full shimmer" />
             )}
           </div>
-          {images.length > 1 && (<>
-            <button onClick={() => scrollBy(-320)} className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/85 backdrop-blur flex items-center justify-center tap shadow-soft"><ChevronLeft size={18} /></button>
-            <button onClick={() => scrollBy(320)} className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/85 backdrop-blur flex items-center justify-center tap shadow-soft"><ChevronRight size={18} /></button>
-            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
-              {images.map((_, i) => (
-                <span key={i} className={`h-1.5 rounded-full transition-all ${i === imgIdx ? 'w-5 bg-burgundy' : 'w-1.5 bg-ink/25'}`} />
+          {images.length > 1 && (
+            <div className="flex flex-col gap-2 w-16 overflow-y-auto no-scrollbar">
+              {images.map((src, i) => (
+                <button
+                  key={i}
+                  onClick={() => setImgIdx(i)}
+                  className={`tap w-16 aspect-square rounded-xl overflow-hidden border shrink-0 transition-all ${i === imgIdx ? 'border-2 border-gold' : 'border-black/70'}`}
+                >
+                  <img src={src} alt={`${product.name} miniature ${i + 1}`} className="w-full h-full object-cover" />
+                </button>
               ))}
             </div>
-          </>)}
+          )}
         </div>
+
+        <div className="px-5 pt-3 flex items-center justify-between">
+          <div className="flex gap-1.5">
+            {images.map((_, i) => (
+              <span key={i} className={`h-1.5 rounded-full transition-all ${i === imgIdx ? 'w-5 bg-burgundy' : 'w-1.5 bg-ink/25'}`} />
+            ))}
+          </div>
+          <button onClick={handleShare} className="tap w-9 h-9 rounded-full border border-black bg-white flex items-center justify-center shadow-md">
+            <Share2 size={16} />
+          </button>
+        </div>
+        {shared && <p className="text-xs text-ink/60 text-center -mt-1">Lien copié</p>}
 
         <div className="px-5 pt-5">
           <p className="text-xs text-gold tracking-[0.2em] uppercase mb-1">{product.category_name}</p>
