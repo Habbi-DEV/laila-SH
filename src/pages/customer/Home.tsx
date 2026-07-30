@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { ChevronRight, Heart, Sparkles } from 'lucide-react';
-import TopBar from '../../components/customer/TopBar';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ChevronRight, Heart, Sparkles, Menu, X, ShoppingBag, Receipt } from 'lucide-react';
 import BottomNav from '../../components/customer/BottomNav';
 import ProductCard from '../../components/customer/ProductCard';
 import Spinner from '../../components/customer/Spinner';
 import { ProductsAPI } from '../../lib/api';
+import { cartCount } from '../../lib/cart';
 import type { Product, Category } from '../../lib/types';
 
 export default function Home() {
@@ -14,6 +14,14 @@ export default function Home() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState('');
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [count, setCount] = useState(cartCount());
+
+  useEffect(() => {
+    const h = () => setCount(cartCount());
+    window.addEventListener('cart-changed', h);
+    return () => window.removeEventListener('cart-changed', h);
+  }, []);
 
   useEffect(() => {
     Promise.all([
@@ -29,12 +37,54 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-softgray pb-24">
-      <TopBar />
 
       {/* Hero Banner */}
       <section className="relative h-[420px] overflow-hidden">
-        <img src="/images/hero-campaign.jpg" alt="Laila Shoes" className="absolute inset-0 w-full h-full object-cover" />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
+        <img src="/images/hero-campaign.jpg" alt="Laila Shoes" className="absolute inset-0 w-full h-full object-cover rounded-t-3xl" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent rounded-t-3xl" />
+
+        {/* Dropdown menu bar - above hero image only */}
+        <div className="relative z-20 max-w-md mx-auto px-5 h-14 flex items-center justify-between">
+          <button
+            onClick={() => setMenuOpen(o => !o)}
+            className="tap p-2 -ml-2 text-white"
+            aria-label="Menu"
+          >
+            {menuOpen ? <X size={22} /> : <Menu size={22} />}
+          </button>
+          <Link to="/cart" className="tap relative p-2 text-white">
+            <ShoppingBag size={20} />
+            {count > 0 && (
+              <span className="absolute top-0.5 right-0.5 min-w-[16px] h-4 px-1 rounded-full bg-burgundy text-white text-[10px] font-semibold flex items-center justify-center">{count}</span>
+            )}
+          </Link>
+        </div>
+
+        <AnimatePresence>
+          {menuOpen && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.2 }}
+              className="absolute top-14 inset-x-0 z-30 mx-4 rounded-2xl bg-white/95 backdrop-blur-xl shadow-lg overflow-hidden"
+            >
+              <Link to="/" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 px-5 py-3 text-ink border-b border-bordergray/60">
+                <Sparkles size={18} className="text-gold" /> Accueil
+              </Link>
+              <Link to="/shop" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 px-5 py-3 text-ink border-b border-bordergray/60">
+                <ChevronRight size={18} className="text-gold" /> Boutique
+              </Link>
+              <Link to="/cart" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 px-5 py-3 text-ink border-b border-bordergray/60">
+                <ShoppingBag size={18} className="text-gold" /> Panier
+              </Link>
+              <Link to="/orders" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 px-5 py-3 text-ink">
+                <Receipt size={18} className="text-gold" /> Commandes
+              </Link>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         <div className="relative h-full flex flex-col justify-end items-center text-center px-6 pb-12">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
