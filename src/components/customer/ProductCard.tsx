@@ -16,7 +16,7 @@ export default function ProductCard({ product, index = 0 }: { product: CardProdu
         transition={{ duration: 0.5, delay: (index % 4) * 0.06 }}
         className="group"
       >
-        <div className="relative aspect-[4/5] rounded-2xl overflow-hidden bg-softgray border border-black shadow-md">
+        <div className="relative aspect-[4/5] rounded-2xl overflow-hidden bg-softgray border border-black shadow-lg">
           {product.cover_image ? (
             <img src={product.cover_image} alt={product.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
           ) : (
