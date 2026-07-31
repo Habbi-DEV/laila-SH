@@ -119,26 +119,27 @@ export default function ProductPage() {
         </div>
         {shared && <p className="text-xs text-ink/60 text-center -mt-1">Lien copié</p>}
 
-        <div className="px-5 pt-5">
+        <div className="px-5 pt-4">
           <p className="text-xs text-gold tracking-[0.2em] uppercase mb-1">{product.category_name}</p>
-          <h1 className="font-serif text-2xl leading-tight">{product.name}</h1>
-          <div className="flex items-baseline gap-2 mt-2">
-            {Number(product.discount) > 0 && <span className="text-base text-ink/40 line-through">{Number(product.price).toFixed(0)} DA</span>}
-            <span className="text-xl font-semibold text-burgundy">{final.toFixed(0)} DA</span>
-            {Number(product.discount) > 0 && <span className="text-xs bg-burgundy/10 text-burgundy px-2 py-0.5 rounded-full">−{product.discount}%</span>}
+          <div className="flex items-baseline justify-between gap-3">
+            <h1 className="font-serif text-xl leading-tight">{product.name}</h1>
+            <div className="flex items-baseline gap-1.5 shrink-0">
+              {Number(product.discount) > 0 && <span className="text-xs text-ink/40 line-through">{Number(product.price).toFixed(0)} DA</span>}
+              <span className="text-base font-semibold text-burgundy whitespace-nowrap">{final.toFixed(0)} DA</span>
+            </div>
           </div>
+          {Number(product.discount) > 0 && (
+            <span className="inline-block mt-1 text-xs bg-burgundy/10 text-burgundy px-2 py-0.5 rounded-full">−{product.discount}%</span>
+          )}
 
           {variants.length > 0 && (
-            <div className="mt-6">
-              <div className="flex items-center justify-between mb-2.5">
-                <span className="text-sm font-medium">Couleur</span>
-                <span className="text-sm text-ink/60">{variant?.color_name}</span>
-              </div>
-              <div className="flex gap-3 flex-wrap">
+            <div className="mt-3">
+              <p className="text-sm text-ink/60 mb-1.5">Couleur — <span className="text-ink font-medium">{variant?.color_name}</span></p>
+              <div className="flex gap-2 flex-wrap">
                 {variants.map((v, i) => (
                   <button key={v.id || i} onClick={() => setSelVariant(i)} className="tap relative">
-                    <span className={`block w-9 h-9 rounded-full border border-black ring-1 transition-all ${selVariant === i ? 'ring-2 ring-burgundy ring-offset-2 ring-offset-white' : 'ring-bordergray'}`} style={{ background: v.color_hex }} />
-                    {v.is_default && <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-gold ring-2 ring-white" />}
+                    <span className={`block w-[22px] h-[22px] rounded-full border transition-all ${selVariant === i ? 'border-2 border-gold' : 'border border-black/70'}`} style={{ background: v.color_hex }} />
+                    {v.is_default && <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-gold ring-2 ring-white" />}
                   </button>
                 ))}
               </div>
@@ -146,7 +147,7 @@ export default function ProductPage() {
           )}
 
           {variant && variant.sizes?.length > 0 && (
-            <div className="mt-6" ref={sizeRef}>
+            <div className="mt-4" ref={sizeRef}>
               <div className="flex items-center justify-between mb-2.5">
                 <span className="text-sm font-medium">Taille</span>
                 <span className="text-xs text-ink/50">Stock total: {totalStock}</span>
@@ -167,7 +168,7 @@ export default function ProductPage() {
           )}
 
           {product.description && (
-            <div className="mt-6">
+            <div className="mt-5">
               <h2 className="text-sm font-medium mb-2">Description</h2>
               <p className="text-sm text-ink/70 leading-relaxed whitespace-pre-line">{product.description}</p>
             </div>
