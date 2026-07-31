@@ -1,17 +1,14 @@
 export function ProductCardSkeleton() {
   return (
     <div>
-      <div className="relative aspect-[4/5] rounded-2xl overflow-hidden border border-black shadow-lg">
+      <div className="relative aspect-[4/5] rounded-2xl overflow-hidden shadow-[0_8px_24px_-4px_rgba(0,0,0,0.12)]">
         <div className="w-full h-full shimmer" />
       </div>
       <div className="pt-2.5 px-0.5 space-y-2">
         <div className="h-3 w-3/4 rounded-full shimmer" />
         <div className="h-3 w-1/3 rounded-full shimmer" />
-        <div className="flex gap-1.5 pt-0.5">
-          <div className="w-3 h-3 rounded-full shimmer" />
-          <div className="w-3 h-3 rounded-full shimmer" />
-          <div className="w-3 h-3 rounded-full shimmer" />
-        </div>
+        <div className="h-4 w-1/2 rounded-full shimmer" />
+        <div className="h-8 w-full rounded-full shimmer" />
       </div>
     </div>
   );
