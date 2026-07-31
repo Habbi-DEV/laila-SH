@@ -5,7 +5,7 @@ import { SlidersHorizontal, X } from 'lucide-react';
 import TopBar from '../../components/customer/TopBar';
 import BottomNav from '../../components/customer/BottomNav';
 import ProductCard from '../../components/customer/ProductCard';
-import Spinner from '../../components/customer/Spinner';
+import { ProductGridSkeleton } from '../../components/customer/Skeleton';
 import { ProductsAPI } from '../../lib/api';
 import type { Product } from '../../lib/types';
 
@@ -160,7 +160,7 @@ export default function Shop() {
         )}
 
         {/* Products grid */}
-        {loading ? <Spinner className="py-16" /> : err ? (
+        {loading ? <ProductGridSkeleton count={6} /> : err ? (
           <p className="text-sm text-rose text-center py-12">{err}</p>
         ) : filtered.length === 0 ? (
           <div className="text-center py-20">

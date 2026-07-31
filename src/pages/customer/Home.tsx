@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronRight, Heart, Sparkles, Menu, X, ShoppingBag, Receipt } from 'lucide-react';
 import BottomNav from '../../components/customer/BottomNav';
 import ProductCard from '../../components/customer/ProductCard';
-import Spinner from '../../components/customer/Spinner';
+import { ProductGridSkeleton } from '../../components/customer/Skeleton';
 import { ProductsAPI } from '../../lib/api';
 import { cartCount } from '../../lib/cart';
 import type { Product, Category } from '../../lib/types';
@@ -153,7 +153,7 @@ export default function Home() {
             <Heart className="text-burgundy" size={18} fill="currentColor" />
             <h2 className="font-serif text-xl text-ink">Coups de cœur</h2>
           </div>
-          {loading ? <Spinner className="py-16" /> : err ? (
+          {loading ? <ProductGridSkeleton count={4} /> : err ? (
             <p className="text-sm text-rose text-center py-12">{err}</p>
           ) : coupsDeCoeur.length === 0 ? (
             <p className="text-sm text-ink/40 text-center py-12">Aucun produit pour le moment</p>

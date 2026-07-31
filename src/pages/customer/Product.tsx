@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Check, ShoppingBag, Share2 } from 'lucide-react';
 import TopBar from '../../components/customer/TopBar';
 import BottomNav from '../../components/customer/BottomNav';
-import Spinner from '../../components/customer/Spinner';
+import { ProductDetailSkeleton } from '../../components/customer/Skeleton';
 import { ProductsAPI } from '../../lib/api';
 import { addToCart, effectivePrice } from '../../lib/cart';
 import type { Product, ProductVariant } from '../../lib/types';
@@ -76,7 +76,7 @@ export default function ProductPage() {
     }
   };
 
-  if (loading) return (<div className="min-h-screen bg-white"><TopBar showBack /><Spinner className="py-32" /></div>);
+  if (loading) return (<div className="min-h-screen bg-white"><TopBar showBack /><main className="max-w-md mx-auto pb-32"><ProductDetailSkeleton /></main></div>);
   if (err && !product) return (<div className="min-h-screen bg-white"><TopBar showBack /><p className="text-center text-rose py-32">{err}</p></div>);
   if (!product) return null;
 

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import TopBar from '../../components/customer/TopBar';
 import BottomNav from '../../components/customer/BottomNav';
-import Spinner from '../../components/customer/Spinner';
+import { OrderListSkeleton } from '../../components/customer/Skeleton';
 import { OrdersAPI } from '../../lib/api';
 import type { Order } from '../../lib/types';
 
@@ -38,7 +38,7 @@ export default function Orders() {
       <main className="max-w-md mx-auto px-5 pb-28 pt-4">
         <h1 className="font-serif text-2xl mb-5">Mes commandes</h1>
         
-        {loading ? <Spinner className="py-32" /> : orders.length === 0 ? (
+        {loading ? <OrderListSkeleton count={4} /> : orders.length === 0 ? (
           <p className="text-center text-ink/50 py-32">Aucune commande pour le moment</p>
         ) : (
           <div className="space-y-3">
