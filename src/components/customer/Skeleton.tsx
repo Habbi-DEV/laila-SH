@@ -1,6 +1,6 @@
 export function ProductCardSkeleton() {
   return (
-    <div className="rounded-2xl overflow-hidden bg-white shadow-[0_8px_24px_-4px_rgba(0,0,0,0.12)]">
+    <div className="rounded-2xl overflow-hidden bg-white shadow-[0_14px_36px_-6px_rgba(0,0,0,0.22)]">
       <div className="relative aspect-[4/5]">
         <div className="w-full h-full shimmer" />
       </div>
