@@ -33,7 +33,7 @@ export default function Orders() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-lavender">
       <TopBar title="Commandes" />
       <main className="max-w-md mx-auto px-5 pb-28 pt-4">
         <h1 className="font-serif text-2xl mb-5">Mes commandes</h1>

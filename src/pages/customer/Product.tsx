@@ -76,12 +76,12 @@ export default function ProductPage() {
     }
   };
 
-  if (loading) return (<div className="min-h-screen bg-white"><TopBar showBack /><main className="max-w-md mx-auto pb-32"><ProductDetailSkeleton /></main></div>);
-  if (err && !product) return (<div className="min-h-screen bg-white"><TopBar showBack /><p className="text-center text-rose py-32">{err}</p></div>);
+  if (loading) return (<div className="min-h-screen bg-lavender"><TopBar showBack /><main className="max-w-md mx-auto pb-32"><ProductDetailSkeleton /></main></div>);
+  if (err && !product) return (<div className="min-h-screen bg-lavender"><TopBar showBack /><p className="text-center text-rose py-32">{err}</p></div>);
   if (!product) return null;
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-lavender">
       <TopBar showBack />
       <main className="max-w-md mx-auto pb-32">
         <div className="px-4 pt-3 flex gap-3">
