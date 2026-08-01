@@ -36,7 +36,7 @@ export default function Home() {
   const coupsDeCoeur = active.slice(0, 6);
 
   return (
-    <div className="min-h-screen bg-white pb-24">
+    <div className="min-h-screen bg-ivory pb-24">
 
       {/* Hero Banner */}
       <section className="relative h-[420px] shadow-[0_12px_40px_-8px_rgba(0,0,0,0.18)]">

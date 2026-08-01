@@ -62,7 +62,7 @@ export default function Checkout() {
 
   if (items.length === 0 && !loading) {
     return (
-      <div className="min-h-screen bg-white">
+      <div className="min-h-screen bg-ivory">
         <TopBar showBack />
         <div className="max-w-md mx-auto px-5 pt-32 text-center">
           <p className="text-ink/50">Votre panier est vide.</p>
@@ -126,7 +126,7 @@ export default function Checkout() {
   );
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-ivory">
       <TopBar title="Commande" showBack />
       <main className="max-w-md mx-auto px-5 pb-40 pt-4">
         <h1 className="font-serif text-2xl mb-5">Finaliser la commande</h1>
