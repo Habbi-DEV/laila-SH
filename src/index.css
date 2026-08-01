@@ -3,6 +3,7 @@
 
 @theme {
   --color-white: #FFFFFF;
+  --color-ivory: #FAF7F2;
   --color-lavender: #EFEDFB;
   --color-softgray: #F7F4EF;
   --color-bordergray: #E7E2D8;
@@ -30,7 +31,7 @@ html, body, #root { height: 100%; }
 
 body {
   font-family: var(--font-sans);
-  background: var(--color-white);
+  background: var(--color-ivory);
   color: var(--color-ink);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
