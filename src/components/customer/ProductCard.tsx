@@ -16,7 +16,7 @@ export default function ProductCard({ product, index = 0 }: { product: CardProdu
         transition={{ duration: 0.5, delay: (index % 4) * 0.06 }}
         className="group"
       >
-        <div className="rounded-2xl overflow-hidden bg-softgray shadow-[0_4px_24px_-8px_rgba(0,0,0,0.08)]">
+        <div className="rounded-2xl overflow-hidden bg-lavender shadow-[0_4px_24px_-8px_rgba(0,0,0,0.08)]">
           <div className="relative aspect-[4/5] bg-white">
             {product.cover_image ? (
               <img src={product.cover_image} alt={product.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
@@ -52,7 +52,7 @@ export default function ProductCard({ product, index = 0 }: { product: CardProdu
               ● {product.in_stock === false ? 'Rupture de stock' : 'En stock'}
             </span>
             <div
-              className={`tap mt-2 w-full h-9 rounded-full flex items-center justify-center text-xs font-medium ${product.in_stock === false ? 'bg-softgray text-ink/35' : 'bg-black text-white'}`}
+              className={`tap mt-2 w-full h-9 rounded-full flex items-center justify-center text-xs font-medium ${product.in_stock === false ? 'bg-lavender text-ink/35' : 'bg-black text-white'}`}
             >
               {product.in_stock === false ? 'Indisponible' : 'Commander'}
             </div>
