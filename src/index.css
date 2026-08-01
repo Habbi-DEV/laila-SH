@@ -6,8 +6,8 @@
   --color-lavender: #EFEDFB;
   --color-softgray: #F7F4EF;
   --color-bordergray: #E7E2D8;
-  --color-burgundy: #6B1F2E;
-  --color-burgundy-dark: #4A1521;
+  --color-burgundy: #4C2A85;
+  --color-burgundy-dark: #341D5E;
   --color-rose: #B24A5A;
   --color-gold: #C9A55C;
   --color-gold-light: #E0C887;
@@ -18,7 +18,7 @@
 
   --shadow-soft: 0 4px 24px -8px rgba(0,0,0,0.08);
   --shadow-card: 0 8px 40px -12px rgba(0,0,0,0.10);
-  --shadow-lift: 0 16px 56px -16px rgba(139,30,63,0.18);
+  --shadow-lift: 0 16px 56px -16px rgba(76,42,133,0.18);
 
   --radius-card: 16px;
   --radius-chip: 12px;
