@@ -33,7 +33,7 @@ export default function Orders() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-lavender">
+    <div className="min-h-screen bg-white">
       <TopBar title="Commandes" />
       <main className="max-w-md mx-auto px-5 pb-28 pt-4">
         <h1 className="font-serif text-2xl mb-5">Mes commandes</h1>
@@ -43,7 +43,7 @@ export default function Orders() {
         ) : (
           <div className="space-y-3">
             {orders.map(o => (
-              <div key={o.id} className="bg-white rounded-2xl p-4 shadow-soft">
+              <div key={o.id} className="bg-lavender rounded-2xl p-4 shadow-[0_4px_24px_-8px_rgba(0,0,0,0.08)]">
                 <div className="flex justify-between items-start">
                   <div>
                     <p className="font-medium text-sm">Commande #{o.id}</p>

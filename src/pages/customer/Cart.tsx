@@ -23,7 +23,7 @@ export default function Cart() {
   const total = items.reduce((s, i) => s + i.qty * i.price, 0);
 
   return (
-    <div className="min-h-screen bg-lavender">
+    <div className="min-h-screen bg-white">
       <TopBar title="Panier" />
       <main className="max-w-md mx-auto px-5 pb-32 pt-4">
         <h1 className="font-serif text-2xl mb-5">Mon Panier</h1>
@@ -39,8 +39,8 @@ export default function Cart() {
               <AnimatePresence>
                 {items.map(item => (
                   <motion.div key={item.key} layout initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, x: -40 }}
-                    className="bg-white rounded-2xl p-3 flex gap-3 shadow-soft">
-                    <div className="w-20 h-24 rounded-xl overflow-hidden bg-softgray shrink-0">
+                    className="bg-lavender rounded-2xl p-3 flex gap-3 shadow-[0_4px_24px_-8px_rgba(0,0,0,0.08)]">
+                    <div className="w-20 h-24 rounded-xl overflow-hidden bg-white shrink-0">
                       {item.image && <img src={item.image} alt={item.name} className="w-full h-full object-cover" />}
                     </div>
                     <div className="flex-1 min-w-0">
@@ -65,7 +65,7 @@ export default function Cart() {
                 ))}
               </AnimatePresence>
             </div>
-            <div className="mt-5 bg-white rounded-2xl p-4 shadow-soft space-y-2">
+            <div className="mt-5 bg-lavender rounded-2xl p-4 shadow-[0_4px_24px_-8px_rgba(0,0,0,0.08)] space-y-2">
               <div className="flex justify-between text-sm text-ink/70"><span>Sous-total</span><span>{total.toFixed(0)} DA</span></div>
               <div className="flex justify-between text-sm text-ink/70"><span>Livraison</span><span className="text-gold text-xs">Calculée à l'étape suivante</span></div>
               <div className="gold-line my-1" />

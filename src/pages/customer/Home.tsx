@@ -168,7 +168,7 @@ export default function Home() {
 
         {/* Brand strip */}
         <section className="mt-12 mb-2">
-          <div className="bg-burgundy rounded-2xl p-6 text-center shadow-[0_8px_28px_-8px_rgba(107,31,46,0.35)]">
+          <div className="bg-burgundy rounded-2xl p-6 text-center shadow-[0_8px_28px_-8px_rgba(76,42,133,0.35)]">
             <Sparkles className="text-gold mx-auto mb-2" size={24} />
             <p className="font-serif text-white text-lg">Livraison dans toute l'Algérie</p>
             <p className="text-white/70 text-xs mt-1">Paiement à la livraison · 58 wilayas</p>

@@ -93,7 +93,7 @@ export default function Shop() {
   }, [afterSubFilter, selSize]);
 
   return (
-    <div className="min-h-screen bg-lavender">
+    <div className="min-h-screen bg-white">
       <TopBar title="Boutique" />
       <main className="max-w-md mx-auto px-5 pb-28 pt-4">
         <h1 className="font-serif text-2xl mb-4">Boutique</h1>

@@ -76,16 +76,16 @@ export default function ProductPage() {
     }
   };
 
-  if (loading) return (<div className="min-h-screen bg-lavender"><TopBar showBack /><main className="max-w-md mx-auto pb-32"><ProductDetailSkeleton /></main></div>);
-  if (err && !product) return (<div className="min-h-screen bg-lavender"><TopBar showBack /><p className="text-center text-rose py-32">{err}</p></div>);
+  if (loading) return (<div className="min-h-screen bg-white"><TopBar showBack /><main className="max-w-md mx-auto pb-32"><ProductDetailSkeleton /></main></div>);
+  if (err && !product) return (<div className="min-h-screen bg-white"><TopBar showBack /><p className="text-center text-rose py-32">{err}</p></div>);
   if (!product) return null;
 
   return (
-    <div className="min-h-screen bg-lavender">
+    <div className="min-h-screen bg-white">
       <TopBar showBack />
       <main className="max-w-md mx-auto pb-32">
         <div className="px-4 pt-3 flex gap-3">
-          <div className="flex-1 aspect-[4/5] rounded-2xl overflow-hidden border border-black shadow-lg bg-softgray">
+          <div className="flex-1 aspect-[4/5] rounded-2xl overflow-hidden shadow-[0_8px_28px_-8px_rgba(0,0,0,0.18)] bg-lavender">
             {images.length ? (
               <img src={images[imgIdx]} alt={`${product.name} ${imgIdx + 1}`} className="w-full h-full object-cover" />
             ) : (
@@ -98,7 +98,7 @@ export default function ProductPage() {
                 <button
                   key={i}
                   onClick={() => setImgIdx(i)}
-                  className={`tap w-16 aspect-square rounded-xl overflow-hidden border shrink-0 transition-all ${i === imgIdx ? 'border-2 border-gold' : 'border-black/70'}`}
+                  className={`tap w-16 aspect-square rounded-xl overflow-hidden border shrink-0 transition-all ${i === imgIdx ? 'border-2 border-gold' : 'border-bordergray'}`}
                 >
                   <img src={src} alt={`${product.name} miniature ${i + 1}`} className="w-full h-full object-cover" />
                 </button>
@@ -113,7 +113,7 @@ export default function ProductPage() {
               <span key={i} className={`h-1.5 rounded-full transition-all ${i === imgIdx ? 'w-5 bg-burgundy' : 'w-1.5 bg-ink/25'}`} />
             ))}
           </div>
-          <button onClick={handleShare} className="tap w-9 h-9 rounded-full border border-black bg-white flex items-center justify-center shadow-md">
+          <button onClick={handleShare} className="tap w-9 h-9 rounded-full bg-white flex items-center justify-center shadow-[0_4px_16px_-4px_rgba(0,0,0,0.15)]">
             <Share2 size={16} />
           </button>
         </div>
@@ -138,7 +138,7 @@ export default function ProductPage() {
               <div className="flex gap-2 flex-wrap">
                 {variants.map((v, i) => (
                   <button key={v.id || i} onClick={() => setSelVariant(i)} className="tap relative">
-                    <span className={`block w-[22px] h-[22px] rounded-full border transition-all ${selVariant === i ? 'border-2 border-gold' : 'border border-black/70'}`} style={{ background: v.color_hex }} />
+                    <span className={`block w-[22px] h-[22px] rounded-full border transition-all ${selVariant === i ? 'border-2 border-gold' : 'border border-bordergray'}`} style={{ background: v.color_hex }} />
                     {v.is_default && <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-gold ring-2 ring-white" />}
                   </button>
                 ))}
@@ -158,7 +158,7 @@ export default function ProductPage() {
                   const sel = selSize === s.size;
                   return (
                     <button key={s.size} disabled={out} onClick={() => { setSelSize(s.size); setErr(''); }}
-                      className={`tap h-11 rounded-xl text-sm font-medium border transition-all ${sel ? 'border-burgundy bg-burgundy text-white' : out ? 'border-bordergray bg-softgray text-ink/25 line-through' : 'border-bordergray bg-white text-ink hover:border-burgundy/40'}`}>
+                      className={`tap h-11 rounded-xl text-sm font-medium border transition-all ${sel ? 'border-burgundy bg-burgundy text-white' : out ? 'border-bordergray bg-lavender text-ink/25 line-through' : 'border-bordergray bg-white text-ink hover:border-burgundy/40'}`}>
                       {s.size}
                     </button>
                   );

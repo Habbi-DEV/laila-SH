@@ -62,7 +62,7 @@ export default function Checkout() {
 
   if (items.length === 0 && !loading) {
     return (
-      <div className="min-h-screen bg-lavender">
+      <div className="min-h-screen bg-white">
         <TopBar showBack />
         <div className="max-w-md mx-auto px-5 pt-32 text-center">
           <p className="text-ink/50">Votre panier est vide.</p>
@@ -126,12 +126,12 @@ export default function Checkout() {
   );
 
   return (
-    <div className="min-h-screen bg-lavender">
+    <div className="min-h-screen bg-white">
       <TopBar title="Commande" showBack />
       <main className="max-w-md mx-auto px-5 pb-40 pt-4">
         <h1 className="font-serif text-2xl mb-5">Finaliser la commande</h1>
 
-        <section className="bg-white rounded-2xl p-4 shadow-soft space-y-4">
+        <section className="bg-lavender rounded-2xl p-4 shadow-[0_4px_24px_-8px_rgba(0,0,0,0.08)] space-y-4">
           <h2 className="text-sm font-medium">Livraison</h2>
           {field('name', 'Nom complet')}
           {field('phone', 'Téléphone', 'tel')}
@@ -178,7 +178,7 @@ export default function Checkout() {
           </div>
         </section>
 
-        <section className="bg-white rounded-2xl p-4 shadow-soft mt-4">
+        <section className="bg-lavender rounded-2xl p-4 shadow-[0_4px_24px_-8px_rgba(0,0,0,0.08)] mt-4">
           <h2 className="text-sm font-medium mb-3">Paiement</h2>
           <div className="w-full p-3.5 rounded-xl border border-burgundy bg-burgundy/5 flex items-center gap-3">
             <Banknote size={20} className="text-burgundy" />
@@ -190,7 +190,7 @@ export default function Checkout() {
           </div>
         </section>
 
-        <section className="bg-white rounded-2xl p-4 shadow-soft mt-4">
+        <section className="bg-lavender rounded-2xl p-4 shadow-[0_4px_24px_-8px_rgba(0,0,0,0.08)] mt-4">
           <div className="flex justify-between text-sm mb-2"><span className="font-medium">Récapitulatif</span><span className="text-ink/50">{items.length} article(s)</span></div>
           {items.map(i => (
             <div key={i.key} className="flex justify-between text-xs text-ink/70 py-1"><span className="truncate flex-1 pr-2">{i.name} · {i.size}</span><span>{(i.qty * i.price).toFixed(0)} DA</span></div>
