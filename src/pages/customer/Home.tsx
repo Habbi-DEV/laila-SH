@@ -36,12 +36,14 @@ export default function Home() {
   const coupsDeCoeur = active.slice(0, 6);
 
   return (
-    <div className="min-h-screen bg-lavender pb-24">
+    <div className="min-h-screen bg-white pb-24">
 
       {/* Hero Banner */}
-      <section className="relative h-[420px] overflow-hidden">
-        <img src="/images/hero-campaign.jpg" alt="Laila Shoes" className="absolute inset-0 w-full h-full object-cover rounded-t-3xl" />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent rounded-t-3xl" />
+      <section className="relative h-[420px] shadow-[0_12px_40px_-8px_rgba(0,0,0,0.18)]">
+        <div className="absolute inset-0 overflow-hidden rounded-t-3xl">
+          <img src="/images/hero-campaign.jpg" alt="Laila Shoes" className="absolute inset-0 w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
+        </div>
 
         {/* Dropdown menu bar - above hero image only */}
         <div className="relative z-20 max-w-md mx-auto px-5 h-14 flex items-center justify-between">
@@ -67,7 +69,7 @@ export default function Home() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.2 }}
-              className="absolute top-14 inset-x-0 z-30 mx-4 rounded-2xl bg-white/95 backdrop-blur-xl shadow-lg overflow-hidden"
+              className="absolute top-14 inset-x-0 z-30 mx-4 rounded-2xl bg-white/95 backdrop-blur-xl shadow-[0_8px_32px_-8px_rgba(0,0,0,0.2)] overflow-hidden"
             >
               <Link to="/" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 px-5 py-3 text-ink border-b border-bordergray/60">
                 <Sparkles size={18} className="text-gold" /> Accueil
@@ -118,7 +120,7 @@ export default function Home() {
                 transition={{ delay: i * 0.1 }}
               >
                 <Link to={`/shop/${c.slug}`}>
-                  <div className="relative aspect-[4/5] rounded-2xl overflow-hidden border border-black shadow-lg group">
+                  <div className="relative aspect-[4/5] rounded-2xl overflow-hidden shadow-[0_8px_28px_-8px_rgba(0,0,0,0.2)] group">
                     <img src={c.image} alt={c.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                     <div className="absolute bottom-0 left-0 right-0 p-4">
@@ -166,7 +168,7 @@ export default function Home() {
 
         {/* Brand strip */}
         <section className="mt-12 mb-2">
-          <div className="bg-burgundy rounded-2xl p-6 text-center">
+          <div className="bg-burgundy rounded-2xl p-6 text-center shadow-[0_8px_28px_-8px_rgba(107,31,46,0.35)]">
             <Sparkles className="text-gold mx-auto mb-2" size={24} />
             <p className="font-serif text-white text-lg">Livraison dans toute l'Algérie</p>
             <p className="text-white/70 text-xs mt-1">Paiement à la livraison · 58 wilayas</p>
