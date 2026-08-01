@@ -30,7 +30,7 @@ html, body, #root { height: 100%; }
 
 body {
   font-family: var(--font-sans);
-  background: var(--color-softgray);
+  background: var(--color-white);
   color: var(--color-ink);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
