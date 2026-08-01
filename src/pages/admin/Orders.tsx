@@ -4,6 +4,7 @@ import { AlertTriangle, GitMerge, Check, Home, Store, Ban, ShieldAlert, Undo2, R
 import AdminShell from '../../components/admin/AdminShell';
 import Spinner from '../../components/customer/Spinner';
 import { OrdersAPI, UsersAPI } from '../../lib/api';
+import supabase from '../../lib/supabase';
 import type { Order } from '../../lib/types';
 
 const statusLabel: Record<string, string> = {
@@ -38,6 +39,18 @@ export default function AdminOrders() {
     OrdersAPI.getOrders().then(setOrders).catch(e => setErr(e.message)).finally(() => setLoading(false));
   };
   useEffect(() => { refresh(); }, []);
+
+  // Realtime Supabase — dès qu'une nouvelle commande arrive, la liste se met à jour toute seule, sans refresh manuel.
+  useEffect(() => {
+    const channel = supabase
+      .channel('admin-orders-list-realtime')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'orders' }, () => {
+        refresh();
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, []);
 
   const { dupIds, dupGroups } = useMemo(() => {
     const now = Date.now();
