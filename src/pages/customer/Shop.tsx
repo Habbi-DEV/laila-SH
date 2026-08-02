@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SlidersHorizontal, X } from 'lucide-react';
@@ -40,17 +40,32 @@ export default function Shop() {
   const [shoeSubFilter, setShoeSubFilter] = useState<string>('all');
   const [selSize, setSelSize] = useState<string | null>(null);
 
+  // Compteur de requêtes : évite qu'une réponse réseau arrivée en retard
+  // (ex. l'ancien onglet "Tout", plus lent car il renvoie plus de produits)
+  // n'écrase le résultat déjà à jour d'un changement d'onglet plus récent
+  // (ex. "Sacs"). Sans cette garde, changer d'onglet rapidement pouvait
+  // afficher tous les produits alors que "Sacs" restait sélectionné.
+  const requestIdRef = useRef(0);
+
   useEffect(() => {
     setLoading(true);
     setSelSize(null);
     setShoeSubFilter('all');
-    
+
+    const myRequestId = ++requestIdRef.current;
+
     // استخدام ProductsAPI لتمرير الفلاتر بدلاً من بناء الرابط يدوياً
     const filters = catTab === 'all' ? undefined : { category: catTab };
-    
+
     ProductsAPI.getProducts(filters).then((data: ShopProduct[]) => {
+      if (myRequestId !== requestIdRef.current) return; // réponse obsolète, on l'ignore
       setProducts(data.filter((p: ShopProduct) => p.status === 'active'));
-    }).catch((e: any) => setErr(e.message)).finally(() => setLoading(false));
+    }).catch((e: any) => {
+      if (myRequestId !== requestIdRef.current) return;
+      setErr(e.message);
+    }).finally(() => {
+      if (myRequestId === requestIdRef.current) setLoading(false);
+    });
   }, [catTab]);
 
   // Sync URL when category param changes
