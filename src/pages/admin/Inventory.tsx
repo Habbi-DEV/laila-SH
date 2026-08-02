@@ -112,9 +112,9 @@ export default function AdminInventory() {
 
       {loading ? <Spinner className="py-20" /> : err ? <p className="text-rose text-sm text-center py-20">{err}</p> : (
         <>
-          <div className="space-y-3">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
             {products.map((p, pi) => (
-              <motion.div key={p.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: pi * 0.05 }}
+              <motion.div key={p.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: Math.min(pi, 10) * 0.05 }}
                 className="bg-white rounded-2xl p-4 shadow-soft">
                 <div className="flex items-center gap-3 mb-3">
                   <div className="w-12 h-12 rounded-xl overflow-hidden bg-softgray shrink-0">
@@ -184,7 +184,7 @@ export default function AdminInventory() {
           {logs.length > 0 && (
             <div className="mt-6">
               <h2 className="font-serif text-lg mb-3 flex items-center gap-2"><RotateCcw size={16} className="text-rose" /> Activité stock</h2>
-              <div className="space-y-2">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
                 {logs.map(log => (
                   <div key={log.id} className="bg-white rounded-xl p-3 shadow-soft flex items-center gap-3">
                     <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${log.change_type === 'return' ? 'bg-rose/15 text-rose' : 'bg-burgundy/10 text-burgundy'}`}>
