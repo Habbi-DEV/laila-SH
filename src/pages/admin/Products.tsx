@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Plus, Pencil, Trash2, Search } from 'lucide-react';
+import { Plus, Pencil, Trash2, Search, Package } from 'lucide-react';
 import AdminShell from '../../components/admin/AdminShell';
 import Spinner from '../../components/customer/Spinner';
 import { ProductsAPI } from '../../lib/api';
@@ -41,32 +41,32 @@ export default function AdminProducts() {
       {loading ? <Spinner className="py-20" /> : err ? <p className="text-rose text-sm text-center py-20">{err}</p> : filtered.length === 0 ? (
         <div className="bg-white rounded-2xl p-10 text-center shadow-soft"><p className="text-sm text-ink/40">Aucun produit</p></div>
       ) : (
-        // grid-cols-2 dès le mobile (comme la boutique cliente) pour éviter des cartes
-        // géantes en une seule colonne qui obligent à beaucoup scroller sur téléphone.
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2.5 sm:gap-3">
+        // Liste (une ligne par produit) — plus facile à parcourir/rechercher qu'une grille de
+        // photos. Sur grand écran, deux colonnes pour profiter de la largeur sans perdre la
+        // lisibilité de la ligne.
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-2.5">
           {filtered.map((p, i) => {
             const fp = effectivePrice(Number(p.price), Number(p.discount || 0));
             const cp = p as any;
             return (
-              <motion.div key={p.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: Math.min(i, 10) * 0.03 }}
-                className="bg-white rounded-2xl overflow-hidden shadow-soft group">
-                <div className="aspect-square bg-softgray relative">
-                  {cp.cover_image ? <img src={cp.cover_image} className="w-full h-full object-cover" /> : <div className="w-full h-full shimmer" />}
-                  <span className={`absolute top-2 left-2 text-[9px] sm:text-[10px] px-2 py-0.5 rounded-full font-medium ${p.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-white/90 text-ink/50'}`}>
-                    {p.status === 'active' ? 'Actif' : 'Brouillon'}
-                  </span>
-                  {/* Toujours visibles sur mobile/tactile (pas de hover) ; se révèlent au survol sur desktop */}
-                  <div className="absolute top-2 right-2 flex gap-1 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
-                    <Link to={`/admin/products/${p.id}/edit`} className="tap w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/95 shadow-soft flex items-center justify-center text-ink/60"><Pencil size={13} /></Link>
-                    <button onClick={() => del(p.id)} className="tap w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/95 shadow-soft flex items-center justify-center text-ink/40 hover:text-rose"><Trash2 size={13} /></button>
+              <motion.div key={p.id} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: Math.min(i, 12) * 0.02 }}
+                className="bg-white rounded-2xl p-3 shadow-soft flex items-center gap-3">
+                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl overflow-hidden bg-softgray shrink-0">
+                  {cp.cover_image ? <img src={cp.cover_image} className="w-full h-full object-cover" /> : <Package size={20} className="m-auto mt-5 text-ink/20" />}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="font-serif text-[15px] truncate">{p.name}</p>
+                  <div className="flex items-center gap-2 mt-1 flex-wrap">
+                    <span className="text-sm text-burgundy font-semibold">{fp.toFixed(0)} DA</span>
+                    {Number(p.discount) > 0 && <span className="text-[10px] text-ink/40 line-through">{Number(p.price).toFixed(0)}</span>}
+                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${p.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-softgray text-ink/50'}`}>
+                      {p.status === 'active' ? 'Actif' : 'Brouillon'}
+                    </span>
                   </div>
                 </div>
-                <div className="p-2.5 sm:p-3">
-                  <p className="font-medium text-xs sm:text-sm truncate">{p.name}</p>
-                  <div className="flex items-center gap-1.5 sm:gap-2 mt-1">
-                    <span className="text-[11px] sm:text-xs text-burgundy font-semibold">{fp.toFixed(0)} DA</span>
-                    {Number(p.discount) > 0 && <span className="text-[10px] text-ink/40 line-through">{Number(p.price).toFixed(0)}</span>}
-                  </div>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <Link to={`/admin/products/${p.id}/edit`} className="tap w-9 h-9 rounded-full flex items-center justify-center text-ink/50 hover:bg-softgray"><Pencil size={16} /></Link>
+                  <button onClick={() => del(p.id)} className="tap w-9 h-9 rounded-full flex items-center justify-center text-ink/40 hover:bg-rose/10 hover:text-rose"><Trash2 size={16} /></button>
                 </div>
               </motion.div>
             );
