@@ -41,7 +41,9 @@ export default function AdminProducts() {
       {loading ? <Spinner className="py-20" /> : err ? <p className="text-rose text-sm text-center py-20">{err}</p> : filtered.length === 0 ? (
         <div className="bg-white rounded-2xl p-10 text-center shadow-soft"><p className="text-sm text-ink/40">Aucun produit</p></div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+        // grid-cols-2 dès le mobile (comme la boutique cliente) pour éviter des cartes
+        // géantes en une seule colonne qui obligent à beaucoup scroller sur téléphone.
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2.5 sm:gap-3">
           {filtered.map((p, i) => {
             const fp = effectivePrice(Number(p.price), Number(p.discount || 0));
             const cp = p as any;
@@ -50,18 +52,19 @@ export default function AdminProducts() {
                 className="bg-white rounded-2xl overflow-hidden shadow-soft group">
                 <div className="aspect-square bg-softgray relative">
                   {cp.cover_image ? <img src={cp.cover_image} className="w-full h-full object-cover" /> : <div className="w-full h-full shimmer" />}
-                  <span className={`absolute top-2 left-2 text-[10px] px-2 py-0.5 rounded-full font-medium ${p.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-white/90 text-ink/50'}`}>
+                  <span className={`absolute top-2 left-2 text-[9px] sm:text-[10px] px-2 py-0.5 rounded-full font-medium ${p.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-white/90 text-ink/50'}`}>
                     {p.status === 'active' ? 'Actif' : 'Brouillon'}
                   </span>
-                  <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Link to={`/admin/products/${p.id}/edit`} className="tap w-8 h-8 rounded-full bg-white/95 shadow-soft flex items-center justify-center text-ink/60"><Pencil size={14} /></Link>
-                    <button onClick={() => del(p.id)} className="tap w-8 h-8 rounded-full bg-white/95 shadow-soft flex items-center justify-center text-ink/40 hover:text-rose"><Trash2 size={14} /></button>
+                  {/* Toujours visibles sur mobile/tactile (pas de hover) ; se révèlent au survol sur desktop */}
+                  <div className="absolute top-2 right-2 flex gap-1 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
+                    <Link to={`/admin/products/${p.id}/edit`} className="tap w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/95 shadow-soft flex items-center justify-center text-ink/60"><Pencil size={13} /></Link>
+                    <button onClick={() => del(p.id)} className="tap w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/95 shadow-soft flex items-center justify-center text-ink/40 hover:text-rose"><Trash2 size={13} /></button>
                   </div>
                 </div>
-                <div className="p-3">
-                  <p className="font-medium text-sm truncate">{p.name}</p>
-                  <div className="flex items-center gap-2 mt-1">
-                    <span className="text-xs text-burgundy font-semibold">{fp.toFixed(0)} DA</span>
+                <div className="p-2.5 sm:p-3">
+                  <p className="font-medium text-xs sm:text-sm truncate">{p.name}</p>
+                  <div className="flex items-center gap-1.5 sm:gap-2 mt-1">
+                    <span className="text-[11px] sm:text-xs text-burgundy font-semibold">{fp.toFixed(0)} DA</span>
                     {Number(p.discount) > 0 && <span className="text-[10px] text-ink/40 line-through">{Number(p.price).toFixed(0)}</span>}
                   </div>
                 </div>
