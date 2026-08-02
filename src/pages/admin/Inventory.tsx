@@ -4,6 +4,7 @@ import { Package, Save, RotateCcw, TrendingUp, X } from 'lucide-react';
 import AdminShell from '../../components/admin/AdminShell';
 import Spinner from '../../components/customer/Spinner';
 import { ProductsAPI } from '../../lib/api';
+import supabase from '../../lib/supabase';
 
 interface InventoryVariant {
   id: number;
@@ -40,14 +41,31 @@ export default function AdminInventory() {
   const [editing, setEditing] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState<string | null>(null);
 
-  const refresh = () => {
-    setLoading(true);
+  const refresh = (showSpinner = true) => {
+    if (showSpinner) setLoading(true);
     ProductsAPI.getInventory().then((data: { products: InventoryProduct[]; logs: StockLog[] }) => {
       setProducts(data.products);
       setLogs(data.logs);
     }).catch(e => setErr(e.message)).finally(() => setLoading(false));
   };
   useEffect(() => { refresh(); }, []);
+
+  // Realtime Supabase — le stock (et le journal d'activité) se met à jour tout seul dès qu'une
+  // variante change (vente, retour, ajustement manuel ailleurs), sans refresh manuel ni écraser
+  // une case en cours de modification (elle reste affichée depuis l'état `editing`).
+  useEffect(() => {
+    const channel = supabase
+      .channel('admin-inventory-realtime')
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'product_variants' }, () => {
+        refresh(false);
+      })
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'stock_logs' }, () => {
+        refresh(false);
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, []);
 
   const onEdit = (variantId: number, size: string, currentStock: number) => {
     setEditing(e => ({ ...e, [`${variantId}-${size}`]: String(currentStock) }));
