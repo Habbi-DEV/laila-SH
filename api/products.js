@@ -103,7 +103,12 @@ export default async function handler(req, res) {
 
       // --- المنتجات (Products) [الافتراضي] ---
       if (type === 'product') {
-        const { id, category: cat, featured } = req.query;
+        // Le client envoie le paramètre sous le nom "cat" (voir ProductsAPI.getProducts
+        // dans src/lib/api.ts : params.append('cat', filters.category)). Lire "category"
+        // ici ne matchait jamais aucune clé de req.query → le filtre de catégorie était
+        // silencieusement ignoré et l'API renvoyait toujours tous les produits, quelle
+        // que soit la catégorie sélectionnée côté client.
+        const { id, cat, featured } = req.query;
         const { data: categories, error: cerr } = await supabase.from('categories').select('*');
         if (cerr) throw cerr;
 
