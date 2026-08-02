@@ -165,5 +165,8 @@ export const SystemAPI = {
     returned: number;
     delivery_rate: number;
     recent_orders: Partial<Order>[]; //[cite: 7]
+    weekly_sales: { label: string; amount: number; count: number }[];
+    top_products: { name: string; qty: number }[];
+    low_stock: { id: number; name: string; stock: number; image: string | null }[];
   }>('/api/system?type=stats')
 };
