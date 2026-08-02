@@ -5,6 +5,7 @@ import { Package, ShoppingBag, DollarSign, Clock, Plus, ArrowRight, TrendingUp, 
 import AdminShell from '../../components/admin/AdminShell';
 import Spinner from '../../components/customer/Spinner';
 import { SystemAPI } from '../../lib/api';
+import supabase from '../../lib/supabase';
 
 interface Stats {
   products: number; orders: number; revenue: number; pending: number;
@@ -40,7 +41,9 @@ export default function AdminDashboard() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState('');
-  useEffect(() => {
+
+  const refresh = (showSpinner = true) => {
+    if (showSpinner) setLoading(true);
     SystemAPI.getStats()
       .then(d => setStats({
         products: d.products,
@@ -55,6 +58,21 @@ export default function AdminDashboard() {
       }))
       .catch(e => setErr(e.message))
       .finally(() => setLoading(false));
+  };
+
+  useEffect(() => { refresh(); }, []);
+
+  // Realtime Supabase — les statistiques et commandes récentes se mettent à jour toutes seules,
+  // dès qu'une commande est créée ou change de statut, sans refresh manuel.
+  useEffect(() => {
+    const channel = supabase
+      .channel('admin-dashboard-realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => {
+        refresh(false); // pas de spinner : mise à jour discrète en arrière-plan
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
   }, []);
 
   const cards = [
