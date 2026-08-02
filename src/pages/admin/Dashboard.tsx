@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Package, ShoppingBag, DollarSign, Clock, Plus, ArrowRight, TrendingUp, PackageCheck, Undo2 } from 'lucide-react';
+import { Banknote, ShoppingBag, Hourglass, AlertTriangle, ArrowRight, Package, TrendingUp, PackageCheck, Undo2 } from 'lucide-react';
 import AdminShell from '../../components/admin/AdminShell';
 import Spinner from '../../components/customer/Spinner';
 import { SystemAPI } from '../../lib/api';
@@ -10,31 +10,9 @@ import supabase from '../../lib/supabase';
 interface Stats {
   products: number; orders: number; revenue: number; pending: number;
   recent: any[]; delivered: number; shipped: number; returned: number; deliveryRate: number;
-}
-
-function DeliveryRing({ rate }: { rate: number }) {
-  const radius = 34;
-  const circ = 2 * Math.PI * radius;
-  const offset = circ - (Math.min(rate, 100) / 100) * circ;
-  const color = rate >= 70 ? '#8B1E3F' : rate >= 40 ? '#C9A96E' : '#B24A5A';
-  return (
-    <div className="relative w-[88px] h-[88px] shrink-0">
-      <svg width="88" height="88" className="-rotate-90">
-        <circle cx="44" cy="44" r={radius} fill="none" stroke="#E5E5E5" strokeWidth="7" />
-        <motion.circle
-          cx="44" cy="44" r={radius} fill="none" stroke={color} strokeWidth="7"
-          strokeDasharray={circ} strokeLinecap="round"
-          initial={{ strokeDashoffset: circ }}
-          animate={{ strokeDashoffset: offset }}
-          transition={{ duration: 1.2, ease: 'easeOut', delay: 0.2 }}
-        />
-      </svg>
-      <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="font-serif text-xl leading-none" style={{ color }}>{rate}%</span>
-        <span className="text-[8px] text-ink/40 tracking-wide mt-0.5">TAUX</span>
-      </div>
-    </div>
-  );
+  weeklySales: { label: string; amount: number; count: number }[];
+  topProducts: { name: string; qty: number }[];
+  lowStock: { id: number; name: string; stock: number; image: string | null }[];
 }
 
 export default function AdminDashboard() {
@@ -42,8 +20,7 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState('');
 
-  const refresh = (showSpinner = true) => {
-    if (showSpinner) setLoading(true);
+  const loadStats = () => {
     SystemAPI.getStats()
       .then(d => setStats({
         products: d.products,
@@ -55,105 +32,171 @@ export default function AdminDashboard() {
         returned: d.returned,
         deliveryRate: d.delivery_rate,
         recent: d.recent_orders,
+        weeklySales: d.weekly_sales || [],
+        topProducts: d.top_products || [],
+        lowStock: d.low_stock || [],
       }))
       .catch(e => setErr(e.message))
       .finally(() => setLoading(false));
   };
 
-  useEffect(() => { refresh(); }, []);
+  useEffect(() => { loadStats(); }, []);
 
-  // Realtime Supabase — les statistiques et commandes récentes se mettent à jour toutes seules,
-  // dès qu'une commande est créée ou change de statut, sans refresh manuel.
+  // Realtime Supabase — les statistiques et les commandes récentes se rafraîchissent
+  // automatiquement dès qu'une nouvelle commande arrive, sans refresh manuel ni polling.
   useEffect(() => {
     const channel = supabase
       .channel('admin-dashboard-realtime')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => {
-        refresh(false); // pas de spinner : mise à jour discrète en arrière-plan
-      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => loadStats())
       .subscribe();
-
     return () => { supabase.removeChannel(channel); };
   }, []);
 
-  const cards = [
-    { label: 'Produits', value: stats?.products ?? 0, icon: Package, tint: 'bg-burgundy/10 text-burgundy' },
-    { label: 'Commandes', value: stats?.orders ?? 0, icon: ShoppingBag, tint: 'bg-rose/15 text-rose' },
-    { label: 'Revenu', value: `${(stats?.revenue ?? 0).toFixed(0)} DA`, icon: DollarSign, tint: 'bg-gold/20 text-gold' },
-    { label: 'En attente', value: stats?.pending ?? 0, icon: Clock, tint: 'bg-ink/10 text-ink/60' },
+  if (loading) return <AdminShell title="Tableau de bord"><Spinner className="py-32" /></AdminShell>;
+  if (err) return <AdminShell title="Tableau de bord"><p className="text-rose text-sm text-center py-32">{err}</p></AdminShell>;
+  if (!stats) return null;
+
+  const kpis = [
+    { icon: Banknote, label: "Chiffre d'affaires", value: `${stats.revenue.toFixed(0)} DA`, chip: 'bg-gold/20 text-gold' },
+    { icon: Hourglass, label: 'Commandes en attente', value: String(stats.pending), chip: 'bg-amber-100 text-amber-700' },
+    { icon: ShoppingBag, label: 'Total commandes', value: String(stats.orders), chip: 'bg-burgundy/10 text-burgundy' },
+    { icon: AlertTriangle, label: 'Alertes stock', value: String(stats.lowStock.length), chip: 'bg-rose/15 text-rose' },
   ];
+
+  const maxAmount = Math.max(...stats.weeklySales.map(d => d.amount), 1);
+  const maxSold = Math.max(...stats.topProducts.map(t => t.qty), 1);
 
   return (
     <AdminShell title="Tableau de bord">
-      <div className="mb-5">
-        <p className="serif-italic text-gold text-sm">Bienvenue</p>
-        <h1 className="font-serif text-2xl">Tableau de bord</h1>
+      {/* Header */}
+      <div className="mb-6">
+        <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-gold">Console Laila</p>
+        <h1 className="mt-1.5 font-serif text-2xl font-semibold tracking-tight sm:text-3xl">Tableau de bord</h1>
+        <p className="mt-1.5 text-[13.5px] text-ink/50">Voici l'activité de la boutique en temps réel.</p>
       </div>
 
-      {loading ? <Spinner className="py-20" /> : err ? <p className="text-rose text-sm text-center py-20">{err}</p> : (
-        <>
-          <div className="grid grid-cols-2 gap-3">
-            {cards.map((c, i) => (
-              <motion.div key={c.label} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }}
-                className="bg-white rounded-2xl p-4 shadow-soft">
-                <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${c.tint}`}><c.icon size={18} /></div>
-                <p className="text-2xl font-serif mt-3">{c.value}</p>
-                <p className="text-xs text-ink/50 mt-0.5">{c.label}</p>
-              </motion.div>
+      {/* KPIs */}
+      <div className="grid grid-cols-2 gap-3.5 lg:grid-cols-4">
+        {kpis.map(({ icon: Icon, label, value, chip }, i) => (
+          <motion.div key={label} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }}
+            className="rounded-2xl border border-bordergray/70 bg-white p-5 shadow-soft">
+            <span className={`flex h-10 w-10 items-center justify-center rounded-xl ${chip}`}><Icon size={18} /></span>
+            <p className="mt-3.5 truncate text-xl font-extrabold tracking-tight sm:text-[22px]">{value}</p>
+            <p className="mt-0.5 text-[11.5px] font-medium text-ink/40">{label}</p>
+          </motion.div>
+        ))}
+      </div>
+
+      {/* Delivery rate + weekly chart */}
+      <div className="mt-4 grid gap-4 lg:grid-cols-[1.4fr_1fr]">
+        <div className="rounded-2xl border border-bordergray/70 bg-white p-6 shadow-soft">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="font-serif text-xl font-semibold">Ventes — 7 derniers jours</h2>
+              <p className="mt-0.5 text-[12px] text-ink/40">Montant encaissé par jour</p>
+            </div>
+            <span className="rounded-full bg-green-100 px-3 py-1 text-[11px] font-bold text-green-700">
+              +{stats.weeklySales.reduce((s, d) => s + d.amount, 0).toFixed(0)} DA
+            </span>
+          </div>
+          <div className="mt-7 flex h-44 items-end justify-between gap-2 sm:gap-3">
+            {stats.weeklySales.map(d => (
+              <div key={d.label} className="flex flex-1 flex-col items-center gap-2">
+                <span className="text-[10px] font-bold text-ink/40">{d.count > 0 ? d.count : ''}</span>
+                <div className="flex h-32 w-full items-end rounded-xl bg-softgray px-1 pb-0">
+                  <div title={`${d.amount.toFixed(0)} DA`} className="w-full rounded-lg bg-gradient-to-t from-burgundy to-gold transition-all"
+                    style={{ height: `${Math.max(4, Math.round((d.amount / maxAmount) * 100))}%` }} />
+                </div>
+                <span className="text-[10.5px] font-semibold capitalize text-ink/40">{d.label}</span>
+              </div>
             ))}
           </div>
+        </div>
 
-          {/* Delivery Rate — COD critical metric */}
-          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
-            className="mt-3 bg-white rounded-2xl p-5 shadow-soft">
+        {/* Delivery rate ring + top products */}
+        <div className="flex flex-col gap-4">
+          <div className="rounded-2xl border border-bordergray/70 bg-white p-5 shadow-soft">
+            <div className="flex items-center gap-1.5 mb-2">
+              <TrendingUp size={15} className="text-burgundy" />
+              <h2 className="font-serif text-base">Taux de livraison</h2>
+            </div>
             <div className="flex items-center gap-4">
-              <DeliveryRing rate={stats?.deliveryRate ?? 0} />
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-1.5">
-                  <TrendingUp size={15} className="text-burgundy" />
-                  <h2 className="font-serif text-base">Taux de Livraison</h2>
-                </div>
-                <p className="text-xs text-ink/50 mt-1 leading-relaxed">Commandes livrées / commandes expédiées. La métrique critique du COD.</p>
-                <div className="flex items-center gap-4 mt-3">
-                  <div className="flex items-center gap-1.5">
-                    <PackageCheck size={14} className="text-green-600" />
-                    <span className="text-xs text-ink/60">Livrées: <b className="text-ink">{stats?.delivered ?? 0}</b></span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <Undo2 size={14} className="text-rose" />
-                    <span className="text-xs text-ink/60">Retournées: <b className="text-ink">{stats?.returned ?? 0}</b></span>
-                  </div>
-                </div>
-                <p className="text-[11px] text-ink/40 mt-2">Expédiées (total): {stats?.shipped ?? 0}</p>
+              <span className="font-serif text-3xl text-burgundy">{stats.deliveryRate}%</span>
+              <div className="flex-1 space-y-1 text-[11px]">
+                <div className="flex items-center gap-1.5"><PackageCheck size={12} className="text-green-600" /> Livrées: <b>{stats.delivered}</b></div>
+                <div className="flex items-center gap-1.5"><Undo2 size={12} className="text-rose" /> Retournées: <b>{stats.returned}</b></div>
               </div>
             </div>
-          </motion.div>
-
-          <Link to="/admin/products/new" className="tap mt-4 flex items-center gap-3 bg-burgundy text-white rounded-2xl p-4 shadow-lift">
-            <div className="w-10 h-10 rounded-full bg-white/15 flex items-center justify-center"><Plus size={20} /></div>
-            <div className="flex-1 text-left"><p className="font-medium text-sm">Ajouter un produit</p><p className="text-xs text-white/70">Créer avec variantes & couleurs</p></div>
-            <ArrowRight size={18} />
-          </Link>
-
-          <div className="mt-6">
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="font-serif text-lg">Commandes récentes</h2>
-              <Link to="/admin/orders" className="text-xs text-burgundy">Voir tout</Link>
-            </div>
-            {stats!.recent.length === 0 ? (
-              <div className="bg-white rounded-2xl p-8 text-center shadow-soft"><p className="text-sm text-ink/40">Aucune commande</p></div>
-            ) : (
-              <div className="space-y-2">
-                {stats!.recent.slice(0, 5).map((o: any) => (
-                  <div key={o.id} className="bg-white rounded-xl p-3 flex items-center justify-between shadow-soft">
-                    <div><p className="text-sm font-medium">#{o.id} · {o.customer_name || 'Client'}</p><p className="text-xs text-ink/50">{Number(o.total).toFixed(0)} DA</p></div>
-                    <span className={`text-[10px] px-2.5 py-1 rounded-full ${o.status === 'pending' ? 'bg-gold/20 text-gold' : o.status === 'delivered' ? 'bg-green-100 text-green-700' : o.status === 'returned' ? 'bg-rose/15 text-rose' : 'bg-burgundy/10 text-burgundy'}`}>{o.status}</span>
-                  </div>
-                ))}
-              </div>
-            )}
           </div>
-        </>
-      )}
+
+          <div className="flex-1 rounded-2xl border border-bordergray/70 bg-white p-5 shadow-soft">
+            <h2 className="font-serif text-base font-semibold">Produits les plus vendus</h2>
+            <div className="mt-3.5 space-y-3">
+              {stats.topProducts.map(t => (
+                <div key={t.name}>
+                  <div className="flex items-center justify-between text-[12px]">
+                    <span className="truncate font-semibold">{t.name}</span>
+                    <span className="ml-2 shrink-0 font-bold text-burgundy">{t.qty}</span>
+                  </div>
+                  <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-softgray">
+                    <div className="h-full rounded-full bg-gold" style={{ width: `${Math.round((t.qty / maxSold) * 100)}%` }} />
+                  </div>
+                </div>
+              ))}
+              {stats.topProducts.length === 0 && <p className="text-[12.5px] text-ink/40">Aucune vente pour le moment.</p>}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Recent orders + low stock */}
+      <div className="mt-4 grid gap-4 lg:grid-cols-2">
+        <div className="rounded-2xl border border-bordergray/70 bg-white p-6 shadow-soft">
+          <div className="flex items-center justify-between">
+            <h2 className="font-serif text-xl font-semibold">Commandes récentes</h2>
+            <Link to="/admin/orders" className="flex items-center gap-1 text-[11.5px] font-bold text-burgundy hover:underline">
+              Tout voir <ArrowRight size={12} />
+            </Link>
+          </div>
+          {stats.recent.length === 0 ? (
+            <p className="mt-4 text-[12.5px] text-ink/40">Aucune commande</p>
+          ) : (
+            <div className="mt-4 divide-y divide-black/5">
+              {stats.recent.slice(0, 5).map((o: any) => (
+                <div key={o.id} className="flex items-center gap-3 py-2.5">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-softgray text-ink/50"><ShoppingBag size={15} /></span>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-[12.5px] font-bold">#{o.id} <span className="font-medium text-ink/40">· {o.customer_name || 'Client'}</span></p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[12.5px] font-extrabold">{Number(o.total).toFixed(0)} DA</p>
+                    <span className={`mt-0.5 inline-block rounded-full px-2 py-0.5 text-[9.5px] font-bold ${o.status === 'pending' ? 'bg-gold/20 text-gold' : o.status === 'delivered' ? 'bg-green-100 text-green-700' : o.status === 'returned' ? 'bg-rose/15 text-rose' : 'bg-burgundy/10 text-burgundy'}`}>{o.status}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="rounded-2xl border border-bordergray/70 bg-white p-6 shadow-soft">
+          <div className="flex items-center justify-between">
+            <h2 className="font-serif text-xl font-semibold">Stock faible</h2>
+            <Link to="/admin/inventory" className="flex items-center gap-1 text-[11.5px] font-bold text-burgundy hover:underline">
+              Gérer <ArrowRight size={12} />
+            </Link>
+          </div>
+          <div className="mt-3.5 space-y-2.5">
+            {stats.lowStock.map(p => (
+              <div key={p.id} className="flex items-center gap-3">
+                {p.image ? <img src={p.image} alt="" className="h-9 w-9 rounded-lg bg-softgray object-cover" /> : <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-softgray text-ink/30"><Package size={14} /></span>}
+                <p className="min-w-0 flex-1 truncate text-[12.5px] font-semibold">{p.name}</p>
+                <span className="rounded-full bg-rose/15 px-2 py-0.5 text-[10.5px] font-bold text-rose">{p.stock} restants</span>
+              </div>
+            ))}
+            {stats.lowStock.length === 0 && <p className="text-[12.5px] text-ink/40">Tous les stocks sont sains.</p>}
+          </div>
+        </div>
+      </div>
     </AdminShell>
   );
 }
