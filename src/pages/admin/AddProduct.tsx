@@ -72,9 +72,15 @@ export default function AdminAddProduct() {
     }
   }, [id]);
 
-  const sizeSetFor = (slug: string) => slug === 'bags' ? BAG_SIZES : SHOE_SIZES;
+  // Les catégories en base sont en français ("sacs", "souliers-sandales"), pas
+  // "bags"/"shoes". On matche le slug réel (ou, à défaut, le nom) pour que la
+  // bonne grille de tailles s'affiche — sinon la comparaison échoue toujours
+  // et les tailles "chaussures" restent affichées même pour la catégorie Sacs.
+  const isBagCategory = (slug: string, catName?: string) =>
+    slug === 'sacs' || /sac/i.test(catName || slug || '');
+  const sizeSetFor = (slug: string, catName?: string) => isBagCategory(slug, catName) ? BAG_SIZES : SHOE_SIZES;
   const selectedCat = categories.find(c => c.id === Number(categoryId));
-  const sizeSet = selectedCat ? sizeSetFor(selectedCat.slug) : SHOE_SIZES;
+  const sizeSet = selectedCat ? sizeSetFor(selectedCat.slug, selectedCat.name) : SHOE_SIZES;
 
   // ---- variant helpers ----
   const updateVariant = (idx: number, patch: Partial<VState>) =>
@@ -196,7 +202,7 @@ export default function AdminAddProduct() {
             <select value={categoryId} onChange={e => {
               const cid = Number(e.target.value); setCategoryId(cid);
               const cat = categories.find(c => c.id === cid);
-              const ss = cat ? sizeSetFor(cat.slug) : SHOE_SIZES;
+              const ss = cat ? sizeSetFor(cat.slug, cat.name) : SHOE_SIZES;
               setVariants(vs => vs.map(v => ({ ...v, sizes: ss.map(s => ({ size: s, stock: v.sizes.find(x => x.size === s)?.stock || 0 })) })));
             }} className="w-full h-11 px-3 rounded-xl border border-bordergray bg-white text-sm focus:border-burgundy outline-none">
               {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
