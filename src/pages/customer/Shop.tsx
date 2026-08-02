@@ -15,10 +15,13 @@ interface ShopProduct extends Product {
   sizes?: string[];
 }
 
+// Ces clés doivent correspondre EXACTEMENT au slug des catégories en base
+// (table `categories`), sinon l'API silencieusement ignore le filtre et
+// renvoie tous les produits. Slugs réels actuels : 'souliers-sandales', 'sacs'.
 const CAT_TABS = [
   { key: 'all', label: 'Tout' },
-  { key: 'shoes', label: 'Soulier & Sandales' },
-  { key: 'bags', label: 'Sacs' },
+  { key: 'souliers-sandales', label: 'Soulier & Sandales' },
+  { key: 'sacs', label: 'Sacs' },
 ];
 
 const SHOE_SUBFILTERS = [
@@ -78,7 +81,7 @@ export default function Shop() {
 
   // Filter by shoe sub-type (soulier vs sandales) — based on product name keywords
   const afterSubFilter = useMemo(() => {
-    if (catTab !== 'shoes' || shoeSubFilter === 'all') return products;
+    if (catTab !== 'souliers-sandales' || shoeSubFilter === 'all') return products;
     if (shoeSubFilter === 'sandales') {
       return products.filter(p => /sandale|sandals|mule|tong/i.test(p.name));
     }
@@ -112,7 +115,7 @@ export default function Shop() {
 
         {/* Shoe sub-filters (only when shoes category is active) */}
         <AnimatePresence>
-          {catTab === 'shoes' && (
+          {catTab === 'souliers-sandales' && (
             <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
               className="overflow-hidden mb-3">
               <div className="flex gap-2">
