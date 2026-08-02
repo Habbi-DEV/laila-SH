@@ -154,7 +154,7 @@ export default function AdminOrders() {
       {loading ? <Spinner className="py-20" /> : err ? <p className="text-rose text-sm text-center py-20">{err}</p> : visibleOrders.length === 0 ? (
         <div className="bg-white rounded-2xl p-10 text-center shadow-soft"><p className="text-sm text-ink/40">Aucune commande</p></div>
       ) : (
-        <div className="space-y-2">
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-3 items-start">
           {visibleOrders.map((o, i) => {
             const isDup = dupIds.has(o.id);
             const dupGroup = dupGroups.find(g => g.some(x => x.id === o.id)) || [];
@@ -166,7 +166,7 @@ export default function AdminOrders() {
             const allStatuses = ['pending', 'confirmed', 'shipped', 'delivered', 'cancelled', 'returned'];
             const isOverride = overrideMode === o.id;
             return (
-              <motion.div key={o.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}
+              <motion.div key={o.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: Math.min(i, 12) * 0.03 }}
                 className={`bg-white rounded-2xl p-4 shadow-soft border ${isBlacklisted ? 'border-rose/40' : isDup ? 'border-amber-300/70' : 'border-transparent'}`}>
 
                 <button onClick={() => setOpen(open === o.id ? null : o.id)} className="w-full flex items-center justify-between text-left">
